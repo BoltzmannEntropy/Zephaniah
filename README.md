@@ -15,16 +15,16 @@
   [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 
   <br><br>
-  <h1>Jeffrey Epstein Document <i>Search & Archive</i></h1>
-  <p>Search and archive declassified documents related to the Jeffrey Epstein case.<br>Query FBI Vault, DOJ archives, Federal Courts, and other government agencies.</p>
+  <h1>Jeffrey Epstein Document <i>Discovery & Archive</i></h1>
+  <p>Discover and download declassified documents related to the Jeffrey Epstein case.<br>Find files from FBI Vault, DOJ archives, Federal Courts, and other government agencies.</p>
   <br>
   <a href="https://boltzmannentropy.github.io/zephaniah.github.io/"><strong>Get Started</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah"><strong>View on GitHub</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah/releases"><strong>Download</strong></a>
   <br><br>
 </div>
 
-> **Document Search** | **Multi-Agency** | **PDF Viewer** | **Media Player** | **Download Queue**
+> **Document Discovery** | **Multi-Agency** | **PDF Viewer** | **Media Player** | **Download Queue**
 
-A desktop application for **macOS, Windows, and Linux** focused on searching and archiving declassified documents related to the **Jeffrey Epstein case**. Query multiple government sources simultaneously, filter by document type (PDF, DOC, XLS, media files), and build a local archive of relevant documents.
+A desktop application for **macOS, Windows, and Linux** focused on discovering and downloading declassified documents related to the **Jeffrey Epstein case**. The app helps you find and download files from government sources—it does **not** search within document contents. Query multiple agencies simultaneously, filter by file type (PDF, DOC, XLS, media files), and build a local archive of relevant documents.
 
 ### Supported Institutions
 
@@ -42,8 +42,8 @@ A desktop application for **macOS, Windows, and Linux** focused on searching and
 
 ## Features
 
-### Multi-Agency Search
-Query 15+ government agencies simultaneously from a single interface. Advanced filtering by institution category, time range, and document type.
+### Multi-Agency Discovery
+Find documents from 15+ government agencies simultaneously from a single interface. Advanced filtering by institution category, time range, and file type.
 
 ![Download Queue](assets/02-download-queue.png)
 
@@ -139,15 +139,17 @@ flutter build macos --release
 
 ## Usage
 
-### Search Interface
+### Discovery Interface
+
+The app helps you **find and download** documents from government websites—it does not search within document contents.
 
 1. Enter search terms in the search bar (e.g., "Jeffrey Epstein", "Flight Logs")
 2. Select quick tags to refine your query
 3. Choose search engine (DuckDuckGo recommended for privacy)
 4. Set time range filter (Last month, Last year, All time)
-5. Select document types (PDF, DOC, XLS, media)
+5. Select file types (PDF, DOC, XLS, media)
 6. Filter by institution category
-7. Click Search
+7. Click Search to find downloadable files
 
 ### Download Queue
 
