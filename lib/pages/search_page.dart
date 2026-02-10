@@ -595,6 +595,55 @@ class _SearchPageState extends State<SearchPage> {
                   }),
                 ],
               ),
+              // Important note about search limitations
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber, size: 14, color: Colors.red.shade700),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            const TextSpan(text: 'Note: This '),
+                            TextSpan(
+                              text: 'does not search within document contents',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red.shade700),
+                            ),
+                            const TextSpan(text: ' - it searches web pages that link to or mention documents.'),
+                          ],
+                        ),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // DuckDuckGo rate limit warning
+              if (_selectedEngine == SearchEngine.duckduckgo)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'DuckDuckGo rate limits aggressively - if CAPTCHA errors appear, wait a few minutes between searches.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.orange.shade700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 12),
               // Search query preview
               _buildQueryPreview(theme),

@@ -118,7 +118,8 @@ class DuckDuckGoSearchProvider implements SearchProvider {
             body: formData,
           ).timeout(const Duration(seconds: 30));
 
-          if (response.statusCode != 200) {
+          // Accept any 2xx status code as success
+          if (response.statusCode < 200 || response.statusCode >= 300) {
             continue;
           }
 
@@ -133,7 +134,7 @@ class DuckDuckGoSearchProvider implements SearchProvider {
           break; // Success
         }
 
-        if (response == null || response.statusCode != 200) {
+        if (response == null || response.statusCode < 200 || response.statusCode >= 300) {
           if (pageNum == 0) {
             throw SearchProviderException(
               'Failed to fetch search results (status: ${response?.statusCode})',

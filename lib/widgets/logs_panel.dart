@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/services.dart';
 
 class LogsPanel extends StatefulWidget {
@@ -56,6 +57,26 @@ class _LogsPanelState extends State<LogsPanel> {
       case LogLevel.error:
         return Colors.red;
     }
+  }
+
+  void _copyAllLogs(List<LogEntry> entries) {
+    final text = entries.map((e) {
+      final time = '${e.timestamp.hour.toString().padLeft(2, '0')}:${e.timestamp.minute.toString().padLeft(2, '0')}:${e.timestamp.second.toString().padLeft(2, '0')}';
+      return '$time ${e.level.name.toUpperCase()} [${e.source}] ${e.message}';
+    }).join('\n');
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Logs copied to clipboard'), duration: Duration(seconds: 1)),
+    );
+  }
+
+  void _copyLogEntry(LogEntry entry) {
+    final time = '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}:${entry.timestamp.second.toString().padLeft(2, '0')}';
+    final text = '$time ${entry.level.name.toUpperCase()} [${entry.source}] ${entry.message}';
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Log entry copied'), duration: Duration(seconds: 1)),
+    );
   }
 
   @override
@@ -127,6 +148,15 @@ class _LogsPanelState extends State<LogsPanel> {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
+                      icon: const Icon(Icons.copy, size: 18),
+                      onPressed: () => _copyAllLogs(entries),
+                      tooltip: 'Copy all logs',
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.delete_outline, size: 18),
                       onPressed: _log.clear,
                       tooltip: 'Clear logs',
@@ -158,56 +188,81 @@ class _LogsPanelState extends State<LogsPanel> {
                   final entry = entries[index];
                   final color = _getLevelColor(entry.level);
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 1),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}:${entry.timestamp.second.toString().padLeft(2, '0')}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
-                              color:
-                                  colorScheme.onSurface.withValues(alpha: 0.5),
+                  return GestureDetector(
+                    onSecondaryTapUp: (details) {
+                      showMenu(
+                        context: context,
+                        position: RelativeRect.fromLTRB(
+                          details.globalPosition.dx,
+                          details.globalPosition.dy,
+                          details.globalPosition.dx,
+                          details.globalPosition.dy,
+                        ),
+                        items: [
+                          PopupMenuItem(
+                            onTap: () => _copyLogEntry(entry),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.copy, size: 16),
+                                SizedBox(width: 8),
+                                Text('Copy'),
+                              ],
                             ),
                           ),
-                        ),
-                        Container(
-                          width: 50,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(
-                            entry.level.name.toUpperCase(),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
-                              color: color,
-                              fontWeight: FontWeight.bold,
+                        ],
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 1),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 60,
+                            child: Text(
+                              '${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}:${entry.timestamp.second.toString().padLeft(2, '0')}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontFamily: 'monospace',
+                                color:
+                                    colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          width: 100,
-                          child: Text(
-                            '[${entry.source}]',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
-                              color:
-                                  colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            entry.message,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
+                          Container(
+                            width: 50,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              entry.level.name.toUpperCase(),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontFamily: 'monospace',
+                                color: color,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              '[${entry.source}]',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontFamily: 'monospace',
+                                color:
+                                    colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Expanded(
+                            child: SelectableText(
+                              entry.message,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
