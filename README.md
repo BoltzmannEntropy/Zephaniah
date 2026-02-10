@@ -1,14 +1,24 @@
 <div align="center">
   <img src="assets/01-search-documents.png" alt="Zephaniah" width="700"/>
   <br><br>
-  <code>NEW</code>&nbsp;&nbsp;macOS · Windows · Linux
+
+  [![GitHub stars](https://img.shields.io/github/stars/BoltzmannEntropy/Zephaniah?style=social)](https://github.com/BoltzmannEntropy/Zephaniah/stargazers)
+  [![GitHub forks](https://img.shields.io/github/forks/BoltzmannEntropy/Zephaniah?style=social)](https://github.com/BoltzmannEntropy/Zephaniah/network/members)
+  [![GitHub watchers](https://img.shields.io/github/watchers/BoltzmannEntropy/Zephaniah?style=social)](https://github.com/BoltzmannEntropy/Zephaniah/watchers)
+
+  <br>
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+  [![GitHub release](https://img.shields.io/github/v/release/BoltzmannEntropy/Zephaniah)](https://github.com/BoltzmannEntropy/Zephaniah/releases)
+  [![GitHub downloads](https://img.shields.io/github/downloads/BoltzmannEntropy/Zephaniah/total)](https://github.com/BoltzmannEntropy/Zephaniah/releases)
+  [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)](https://github.com/BoltzmannEntropy/Zephaniah)
+  [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
+
   <br><br>
   <h1>Jeffrey Epstein Document <i>Search & Archive</i></h1>
   <p>Search and archive declassified documents related to the Jeffrey Epstein case.<br>Query FBI Vault, DOJ archives, Federal Courts, and other government agencies.</p>
   <br>
-  <a href="https://boltzmannentropy.github.io/zephaniah.github.io/"><strong>Get Started</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah"><strong>View on GitHub</strong></a>
-  <br><br>
-  macOS · Windows · Linux · Free & Open Source
+  <a href="https://boltzmannentropy.github.io/zephaniah.github.io/"><strong>Get Started</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah"><strong>View on GitHub</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah/releases"><strong>Download</strong></a>
   <br><br>
 </div>
 
@@ -218,11 +228,23 @@ Zephaniah searches **publicly available** government documents. All queried sour
 
 ---
 
+## Star History
+
+<a href="https://star-history.com/#BoltzmannEntropy/Zephaniah&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BoltzmannEntropy/Zephaniah&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=BoltzmannEntropy/Zephaniah&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=BoltzmannEntropy/Zephaniah&type=Date" />
+ </picture>
+</a>
+
+---
+
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Copyright (c) 2026 Shlomo Kashani
+MIT License - Copyright (c) 2026 Shlomo Kashani
 
 ## Acknowledgments
 
