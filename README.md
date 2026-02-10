@@ -86,6 +86,25 @@ Download the latest release for your platform:
 | **Windows** | Coming soon |
 | **Linux** | Coming soon |
 
+### macOS Gatekeeper Notice
+
+Since Zephaniah is not notarized with Apple, macOS may display a warning: *"Zephaniah" cannot be opened because Apple cannot check it for malicious software.*
+
+**To open the app:**
+
+**Option 1: Right-click to Open**
+1. Right-click (or Control+click) on `Zephaniah.app`
+2. Select **Open** from the context menu
+3. Click **Open** in the confirmation dialog
+
+**Option 2: System Settings**
+1. Open **System Settings → Privacy & Security**
+2. Scroll down to find *"Zephaniah" was blocked from use*
+3. Click **Open Anyway**
+4. Enter your password if prompted
+
+> **Note:** This warning appears because the app is distributed outside the Mac App Store without a paid Apple Developer certificate. The source code is fully open for inspection.
+
 ### Build from Source
 
 ```bash
