@@ -1,0 +1,233 @@
+<div align="center">
+  <img src="assets/01-search-documents.png" alt="Zephaniah" width="700"/>
+  <br><br>
+  <code>NEW</code>&nbsp;&nbsp;macOS · Windows · Linux
+  <br><br>
+  <h1>Jeffrey Epstein Document <i>Search & Archive</i></h1>
+  <p>Search and archive declassified documents related to the Jeffrey Epstein case.<br>Query FBI Vault, DOJ archives, Federal Courts, and other government agencies.</p>
+  <br>
+  <a href="https://boltzmannentropy.github.io/zephaniah.github.io/"><strong>Get Started</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah"><strong>View on GitHub</strong></a>
+  <br><br>
+  macOS · Windows · Linux · Free & Open Source
+  <br><br>
+</div>
+
+> **Document Search** | **Multi-Agency** | **PDF Viewer** | **Media Player** | **Download Queue**
+
+A desktop application for **macOS, Windows, and Linux** focused on searching and archiving declassified documents related to the **Jeffrey Epstein case**. Query multiple government sources simultaneously, filter by document type (PDF, DOC, XLS, media files), and build a local archive of relevant documents.
+
+### Supported Institutions
+
+| Category | Agencies |
+|----------|----------|
+| **Law Enforcement** | FBI Vault, DEA, US Marshals, ICE, ATF |
+| **Justice** | Department of Justice, Federal Courts, Supreme Court, CourtListener |
+| **Intelligence** | CIA Reading Room, DNI, NSA |
+| **Financial** | SEC, FinCEN, Treasury, IRS |
+| **State/Diplomatic** | State Department archives |
+
+![Search Documents](assets/01-search-documents.png)
+
+---
+
+## Features
+
+### Multi-Agency Search
+Query 15+ government agencies simultaneously from a single interface. Advanced filtering by institution category, time range, and document type.
+
+![Download Queue](assets/02-download-queue.png)
+
+### Parallel Downloads
+Download multiple documents simultaneously with real-time progress tracking. Configure up to 10 concurrent downloads with automatic retry on failure.
+
+![Artifacts](assets/03-artifacts.png)
+
+### Document Library
+Your downloaded artifacts organized chronologically. Browse with the built-in Syncfusion PDF viewer, play audio/video with the integrated media player, and manage storage with detailed statistics.
+
+![Settings](assets/04-settings.png)
+
+### Fully Customizable
+Configure default search terms, file types, download settings, and snapshot scheduling. Control storage location, concurrent downloads, and auto-run preferences.
+
+![Storage](assets/05-storage.png)
+
+---
+
+## Installation
+
+### System Requirements
+
+| Component | Requirement |
+|-----------|-------------|
+| **OS** | macOS 12+ / Windows 10+ / Linux |
+| **CPU** | Apple Silicon (M1/M2/M3/M4) or Intel / AMD x64 |
+| **RAM** | 4GB minimum, 8GB+ recommended |
+| **Storage** | 1GB for application, varies for downloaded artifacts |
+| **Flutter** | 3.x with desktop support |
+
+### Download
+
+Download the latest release for your platform:
+
+| Platform | Download |
+|----------|----------|
+| **macOS** | [Zephaniah-1.0.0-macos.dmg](https://github.com/BoltzmannEntropy/Zephaniah/releases/latest) |
+| **Windows** | Coming soon |
+| **Linux** | Coming soon |
+
+### Build from Source
+
+```bash
+git clone https://github.com/BoltzmannEntropy/Zephaniah.git
+cd Zephaniah
+./install.sh
+```
+
+The installer will:
+1. Check system prerequisites
+2. Install Flutter dependencies
+3. Initialize the SQLite database
+4. Build the application
+
+### Manual Build
+
+```bash
+git clone https://github.com/BoltzmannEntropy/Zephaniah.git
+cd Zephaniah
+
+# Install dependencies
+flutter pub get
+
+# Run in development mode
+flutter run -d macos
+
+# Build release
+flutter build macos --release
+```
+
+---
+
+## Usage
+
+### Search Interface
+
+1. Enter search terms in the search bar (e.g., "Jeffrey Epstein", "Flight Logs")
+2. Select quick tags to refine your query
+3. Choose search engine (DuckDuckGo recommended for privacy)
+4. Set time range filter (Last month, Last year, All time)
+5. Select document types (PDF, DOC, XLS, media)
+6. Filter by institution category
+7. Click Search
+
+### Download Queue
+
+- **Concurrent Downloads**: Configure parallel download threads (default: 3)
+- **Auto-Retry**: Failed downloads automatically retry (configurable attempts)
+- **Progress Tracking**: Real-time download progress with file sizes
+- **Queue Management**: Clear completed downloads, cancel active downloads
+
+### Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Default Search Terms** | Pre-fill search bar on launch |
+| **Search Engine** | DuckDuckGo (default), Google, Bing |
+| **Time Range** | Default time filter for searches |
+| **File Types** | Default document types to include |
+| **Concurrent Downloads** | Number of parallel downloads (1-10) |
+| **Auto-retry Attempts** | Retry count for failed downloads (1-5) |
+| **Download Location** | Local storage path for artifacts |
+| **Auto-run Snapshot** | Enable daily automated snapshots |
+| **Snapshot Retention** | Days to keep snapshot history |
+
+---
+
+## Architecture
+
+```
+Zephaniah/
+├── install.sh              # Automated installer
+├── pubspec.yaml            # Flutter dependencies
+│
+├── lib/
+│   ├── main.dart           # App entry point
+│   ├── screens/
+│   │   ├── search_screen.dart      # Document search UI
+│   │   ├── artifacts_screen.dart   # Downloaded files browser
+│   │   ├── history_screen.dart     # Search history
+│   │   ├── snapshots_screen.dart   # Snapshot management
+│   │   ├── queue_screen.dart       # Download queue
+│   │   ├── settings_screen.dart    # App settings
+│   │   └── mcp_screen.dart         # MCP integration
+│   ├── services/
+│   │   ├── search_service.dart     # Search API integration
+│   │   ├── download_service.dart   # Download manager
+│   │   └── database_service.dart   # SQLite operations
+│   └── widgets/
+│       ├── pdf_viewer.dart         # Syncfusion PDF viewer
+│       └── media_player.dart       # media_kit player
+│
+├── macos/                  # macOS platform configuration
+├── windows/                # Windows platform configuration
+├── linux/                  # Linux platform configuration
+│
+└── assets/                 # App screenshots and icons
+```
+
+---
+
+## Privacy & Legal
+
+Zephaniah searches **publicly available** government documents. All queried sources are official public record repositories:
+
+- FBI Vault (vault.fbi.gov)
+- DOJ documents (justice.gov)
+- Federal Court records (uscourts.gov, supremecourt.gov)
+- CourtListener (courtlistener.com)
+- CIA Reading Room (cia.gov)
+- SEC filings (sec.gov)
+- Treasury documents (treasury.gov)
+
+**No private data is accessed.** The application uses standard search engine APIs to find publicly released documents.
+
+---
+
+## Author
+
+| | |
+|---|---|
+| **Author** | Shlomo Kashani |
+| **Position** | Head of AI at [Qneura](https://qneura.ai/apps.html) |
+| **Affiliation** | Johns Hopkins University, Maryland, U.S.A. |
+
+---
+
+## Citation
+
+```bibtex
+@software{kashani2026zephaniah,
+  title={Zephaniah: Jeffrey Epstein Document Search and Archive},
+  author={Kashani, Shlomo},
+  year={2026},
+  institution={Johns Hopkins University},
+  url={https://github.com/BoltzmannEntropy/Zephaniah},
+  note={Desktop application for searching and archiving declassified Jeffrey Epstein case documents}
+}
+```
+
+---
+
+## License
+
+MIT License
+
+Copyright (c) 2026 Shlomo Kashani
+
+## Acknowledgments
+
+- [Flutter](https://flutter.dev) - Cross-platform UI framework
+- [Syncfusion Flutter PDF](https://pub.dev/packages/syncfusion_flutter_pdfviewer) - PDF viewer
+- [media_kit](https://pub.dev/packages/media_kit) - Media player
+- [SQLite](https://sqlite.org) - Local database
+- [DuckDuckGo](https://duckduckgo.com) - Privacy-focused search

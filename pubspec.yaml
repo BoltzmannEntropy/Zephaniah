@@ -1,0 +1,50 @@
+name: zephaniah
+description: "Public document search and archival tool for investigating institutional records."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # HTTP & Networking
+  http: ^1.2.0
+  html: ^0.15.4
+
+  # PDF Viewer (Syncfusion)
+  syncfusion_flutter_pdfviewer: ^29.1.41
+  syncfusion_flutter_pdf: ^29.1.41
+
+  # Media Player (media_kit)
+  media_kit: ^1.1.11
+  media_kit_video: ^1.2.5
+  media_kit_libs_video: ^1.0.5
+
+  # Database
+  sqflite_common_ffi: ^2.3.4
+  sqlite3_flutter_libs: ^0.5.28
+  path: ^1.9.0
+
+  # File handling
+  path_provider: ^2.1.0
+  file_picker: ^8.0.0
+  url_launcher: ^6.3.0
+
+  # Utilities
+  uuid: ^4.5.1
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
