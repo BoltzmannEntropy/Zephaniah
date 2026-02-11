@@ -3,6 +3,7 @@ export 'settings_service.dart';
 export 'database_service.dart';
 export 'search_service.dart';
 export 'download_service.dart';
+export 'archive_download_service.dart';
 export 'aria2_service.dart';
 export 'library_service.dart';
 export 'thumbnail_service.dart';

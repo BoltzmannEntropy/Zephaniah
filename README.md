@@ -42,8 +42,13 @@ A desktop application for **macOS, Windows, and Linux** focused on discovering a
 
 ## Features
 
-### Archive Downloads
-Download all Epstein Files datasets directly from Internet Archive and Google Drive. No CAPTCHA, no restrictions. ZIP downloads and torrent support for large datasets.
+### Archive Downloads with Auto-Extract
+Download all Epstein Files datasets directly from Internet Archive and Google Drive. No CAPTCHA, no restrictions. **ZIP files are automatically extracted** after download, and contents are immediately available in the Library viewer.
+
+- Direct ZIP downloads from archive.org
+- Torrent/magnet link support for large datasets (9, 10, 11, 13)
+- **Automatic ZIP extraction** with progress tracking
+- Files organized by dataset in the Library
 
 ![Search](assets/02-search.png)
 
@@ -57,8 +62,21 @@ Browse search results with direct download links. View source URLs, file sizes, 
 
 ![Queue](assets/04-queue.png)
 
-### Download Queue
-Download multiple documents simultaneously with real-time progress tracking. Configure up to 10 concurrent downloads with automatic retry on failure.
+### Download Queue with Persistent State
+Download multiple documents simultaneously with real-time progress tracking. **Downloads persist across page navigation** - start a download on the Archives page and monitor it from the Queue page.
+
+- Archive downloads visible in dedicated Queue tab
+- HTTP downloads with progress tracking
+- Torrent downloads via aria2c integration
+- Configure up to 10 concurrent downloads with automatic retry
+
+### Library Viewer
+Browse all downloaded and extracted files in a gallery view. Filter by dataset, file type, or search by filename.
+
+- Grid and list view modes
+- PDF thumbnail generation
+- Built-in PDF viewer (Syncfusion)
+- Integrated media player for audio/video files
 
 ---
 
@@ -180,22 +198,31 @@ Zephaniah/
 ├── pubspec.yaml            # Flutter dependencies
 │
 ├── lib/
-│   ├── main.dart           # App entry point
-│   ├── screens/
-│   │   ├── search_screen.dart      # Document search UI
-│   │   ├── artifacts_screen.dart   # Downloaded files browser
-│   │   ├── history_screen.dart     # Search history
-│   │   ├── snapshots_screen.dart   # Snapshot management
-│   │   ├── queue_screen.dart       # Download queue
-│   │   ├── settings_screen.dart    # App settings
-│   │   └── mcp_screen.dart         # MCP integration
+│   ├── main.dart           # App entry point with MainShell
+│   ├── pages/
+│   │   ├── doj_archives_page.dart  # Archive downloads (ZIP/Torrent)
+│   │   ├── library_page.dart       # Downloaded files gallery
+│   │   ├── search_page.dart        # Multi-agency document search
+│   │   ├── queue_page.dart         # Download queue management
+│   │   ├── results_page.dart       # Search results browser
+│   │   ├── viewer_page.dart        # PDF/media viewer
+│   │   ├── settings_page.dart      # App configuration
+│   │   └── about_page.dart         # Credits and info
 │   ├── services/
+│   │   ├── archive_download_service.dart  # Archive ZIP downloads + extraction
+│   │   ├── download_service.dart   # HTTP download manager
 │   │   ├── search_service.dart     # Search API integration
-│   │   ├── download_service.dart   # Download manager
-│   │   └── database_service.dart   # SQLite operations
+│   │   ├── library_service.dart    # Local file scanning
+│   │   ├── database_service.dart   # SQLite operations
+│   │   ├── aria2_service.dart      # Torrent downloads via aria2c
+│   │   └── settings_service.dart   # Configuration persistence
+│   ├── providers/
+│   │   ├── duckduckgo_search_provider.dart  # Primary search engine
+│   │   ├── google_search_provider.dart
+│   │   └── bing_search_provider.dart
 │   └── widgets/
-│       ├── pdf_viewer.dart         # Syncfusion PDF viewer
-│       └── media_player.dart       # media_kit player
+│       ├── sidebar.dart            # Navigation sidebar
+│       └── download_queue_panel.dart  # Floating download widget
 │
 ├── macos/                  # macOS platform configuration
 ├── windows/                # Windows platform configuration
@@ -270,5 +297,7 @@ MIT License - Copyright (c) 2026 Shlomo Kashani
 - [Flutter](https://flutter.dev) - Cross-platform UI framework
 - [Syncfusion Flutter PDF](https://pub.dev/packages/syncfusion_flutter_pdfviewer) - PDF viewer
 - [media_kit](https://pub.dev/packages/media_kit) - Media player
+- [archive](https://pub.dev/packages/archive) - ZIP extraction
 - [SQLite](https://sqlite.org) - Local database
 - [DuckDuckGo](https://duckduckgo.com) - Privacy-focused search
+- [Internet Archive](https://archive.org) - Primary data source for Epstein Files

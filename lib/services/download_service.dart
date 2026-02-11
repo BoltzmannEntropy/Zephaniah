@@ -189,7 +189,11 @@ class DownloadService extends ChangeNotifier {
       request.headers['User-Agent'] =
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
 
-      final response = await client.send(request);
+      // Add timeout for initial connection (stream continues after)
+      final response = await client.send(request).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Connection timed out'),
+      );
 
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');

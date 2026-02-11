@@ -191,6 +191,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   // Dataset filter
                   Expanded(
                     child: DropdownButtonFormField<String?>(
+                      // ignore: deprecated_member_use
                       value: _library.currentDataset,
                       decoration: InputDecoration(
                         labelText: 'Dataset',
@@ -222,6 +223,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   // Type filter
                   Expanded(
                     child: DropdownButtonFormField<String?>(
+                      // ignore: deprecated_member_use
                       value: _library.currentFileType,
                       decoration: InputDecoration(
                         labelText: 'File Type',

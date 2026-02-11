@@ -37,10 +37,12 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _loadStats() async {
     final count = await _db.getArtifactCount();
     final size = await _db.getTotalArtifactSize();
-    setState(() {
-      _artifactCount = count;
-      _totalSize = size;
-    });
+    if (mounted) {
+      setState(() {
+        _artifactCount = count;
+        _totalSize = size;
+      });
+    }
   }
 
   Future<void> _saveSettings() async {
@@ -452,6 +454,7 @@ class _DropdownSetting<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
+      // ignore: deprecated_member_use
       value: value,
       decoration: InputDecoration(
         labelText: label,

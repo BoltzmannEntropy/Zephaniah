@@ -83,9 +83,15 @@ class SearchQuery {
   String buildQuery() {
     final parts = <String>[];
 
-    // Add search terms as-is (user can add quotes if they want exact match)
+    // Add search terms, quoting multi-word terms for exact phrase matching
     if (terms.isNotEmpty) {
-      parts.add(terms);
+      final trimmedTerms = terms.trim();
+      // Quote multi-word terms (contains space and not already quoted)
+      if (trimmedTerms.contains(' ') && !trimmedTerms.startsWith('"')) {
+        parts.add('"$trimmedTerms"');
+      } else {
+        parts.add(trimmedTerms);
+      }
     }
 
     // Add site filters (only if not full internet search)

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import '../services/services.dart';
 
@@ -18,21 +17,23 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
   final LogService _log = LogService();
   final SettingsService _settings = SettingsService();
   final Aria2Service _aria2 = Aria2Service();
-  final Map<String, _DownloadProgress> _zipDownloads = {};
+  final ArchiveDownloadService _archiveDownloads = ArchiveDownloadService();
 
   @override
   void initState() {
     super.initState();
-    _aria2.addListener(_onAria2Changed);
+    _aria2.addListener(_onServiceChanged);
+    _archiveDownloads.addListener(_onServiceChanged);
   }
 
   @override
   void dispose() {
-    _aria2.removeListener(_onAria2Changed);
+    _aria2.removeListener(_onServiceChanged);
+    _archiveDownloads.removeListener(_onServiceChanged);
     super.dispose();
   }
 
-  void _onAria2Changed() {
+  void _onServiceChanged() {
     if (mounted) setState(() {});
   }
 
@@ -160,7 +161,6 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
   ];
 
   // Google Drive folder for additional archives
-  static const String googleDriveFolderId = '18tIY9QEGUZe0q_AFAxoPnnVBCWbqHm2p';
   static const String googleDriveUrl = 'https://drive.google.com/drive/folders/18tIY9QEGUZe0q_AFAxoPnnVBCWbqHm2p';
 
   String _formatBytes(int bytes) {
@@ -197,8 +197,6 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
 
     final downloadDir = _settings.settings.downloadLocation;
     final archivesDir = path.join(downloadDir, 'DOJ_Archives');
-    await Directory(archivesDir).create(recursive: true);
-
     final filename = '${dataset.name.replaceAll(' ', '_')}.zip';
     final filePath = path.join(archivesDir, filename);
 
@@ -210,87 +208,12 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
       await File(filePath).delete();
     }
 
-    setState(() {
-      _zipDownloads[dataset.name] = _DownloadProgress(
-        bytesReceived: 0,
-        totalBytes: dataset.sizeBytes,
-        status: _DownloadStatus.downloading,
-      );
-    });
-
-    _log.info('Archives', 'Starting ZIP download: ${dataset.name}');
-
-    http.Client? client;
-    IOSink? sink;
-
-    try {
-      client = http.Client();
-      final request = http.Request('GET', Uri.parse(dataset.zipUrl!));
-      request.headers['User-Agent'] =
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
-      request.headers['Accept'] = 'application/zip, application/octet-stream, */*';
-
-      final response = await client.send(request);
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception('HTTP ${response.statusCode}');
-      }
-
-      final totalBytes = response.contentLength ?? dataset.sizeBytes;
-      var receivedBytes = 0;
-      final file = File(filePath);
-      sink = file.openWrite();
-
-      await for (final chunk in response.stream) {
-        sink.add(chunk);
-        receivedBytes += chunk.length;
-
-        if (mounted) {
-          setState(() {
-            _zipDownloads[dataset.name] = _DownloadProgress(
-              bytesReceived: receivedBytes,
-              totalBytes: totalBytes,
-              status: _DownloadStatus.downloading,
-            );
-          });
-        }
-      }
-
-      await sink.close();
-      sink = null; // Mark as closed
-
-      if (mounted) {
-        setState(() {
-          _zipDownloads[dataset.name] = _DownloadProgress(
-            bytesReceived: receivedBytes,
-            totalBytes: totalBytes,
-            status: _DownloadStatus.completed,
-            filePath: filePath,
-          );
-        });
-
-        _log.info('Archives', 'Completed: ${dataset.name}');
-        _showCompletionSnackbar(dataset.name, archivesDir);
-      }
-    } catch (e) {
-      _log.error('Archives', 'Failed: ${dataset.name} - $e');
-      if (mounted) {
-        setState(() {
-          _zipDownloads[dataset.name] = _DownloadProgress(
-            bytesReceived: 0,
-            totalBytes: dataset.sizeBytes,
-            status: _DownloadStatus.failed,
-            error: e.toString(),
-          );
-        });
-      }
-    } finally {
-      // Always close resources
-      try {
-        await sink?.close();
-      } catch (_) {}
-      client?.close();
-    }
+    // Use the persistent service for downloads
+    await _archiveDownloads.startDownload(
+      datasetName: dataset.name,
+      url: dataset.zipUrl!,
+      expectedSize: dataset.sizeBytes,
+    );
   }
 
   Future<void> _startTorrentDownload(_DojDataset dataset) async {
@@ -350,9 +273,9 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
             const SizedBox(height: 8),
             const Text('This download may take a long time.'),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Ensure you have sufficient disk space.',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -386,18 +309,6 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
             child: const Text('Overwrite'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showCompletionSnackbar(String name, String dir) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$name downloaded successfully'),
-        action: SnackBarAction(
-          label: 'Open Folder',
-          onPressed: () => _openFolder(dir),
-        ),
       ),
     );
   }
@@ -758,8 +669,34 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
             ],
           ),
           const SizedBox(height: 16),
-          // aria2 status
-          if (_aria2.isRunning)
+          // Active downloads indicator
+          if (_archiveDownloads.hasActiveDownloads)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade300),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${_archiveDownloads.activeCount} download(s) in progress',
+                    style: TextStyle(color: Colors.blue.shade800),
+                  ),
+                ],
+              ),
+            )
+          else if (_aria2.isRunning)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -916,7 +853,7 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
   }
 
   Widget _buildDatasetCard(_DojDataset dataset, ThemeData theme, ColorScheme colorScheme) {
-    final zipProgress = _zipDownloads[dataset.name];
+    final zipProgress = _archiveDownloads.getProgress(dataset.name);
     final torrentStatus = _aria2.torrents.values
         .where((t) => t.name.contains('DataSet${dataset.number}') || t.name.contains(dataset.name))
         .firstOrNull;
@@ -1042,12 +979,17 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
 
   Widget _buildDownloadControls(
     _DojDataset dataset,
-    _DownloadProgress? zipProgress,
+    ArchiveDownloadProgress? zipProgress,
     TorrentStatus? torrentStatus,
   ) {
     // Show ZIP progress if downloading
-    if (zipProgress != null && zipProgress.status == _DownloadStatus.downloading) {
+    if (zipProgress != null && zipProgress.status == ArchiveDownloadStatus.downloading) {
       return _buildZipProgress(dataset, zipProgress);
+    }
+
+    // Show extraction progress
+    if (zipProgress != null && zipProgress.status == ArchiveDownloadStatus.extracting) {
+      return _buildExtractionProgress(dataset, zipProgress);
     }
 
     // Show torrent progress if active
@@ -1056,17 +998,31 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
     }
 
     // Show completion status
-    if (zipProgress?.status == _DownloadStatus.completed) {
+    if (zipProgress?.status == ArchiveDownloadStatus.completed) {
       return Row(
         children: [
           Icon(Icons.check_circle, color: Colors.green.shade600),
           const SizedBox(width: 8),
-          const Text('ZIP Downloaded'),
-          const Spacer(),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Extracted & Ready'),
+                Text(
+                  '${zipProgress!.extractedFiles} files in Library',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
           TextButton.icon(
-            onPressed: () => _openFolder(path.dirname(zipProgress!.filePath!)),
+            onPressed: () => _openFolder(zipProgress.extractedPath ?? _archiveDownloads.archivesDir),
             icon: const Icon(Icons.folder_open, size: 18),
             label: const Text('Open Folder'),
+          ),
+          TextButton(
+            onPressed: () => _archiveDownloads.clearDownload(dataset.name),
+            child: const Text('Clear'),
           ),
         ],
       );
@@ -1083,7 +1039,7 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
     }
 
     // Show error and retry
-    if (zipProgress?.status == _DownloadStatus.failed) {
+    if (zipProgress?.status == ArchiveDownloadStatus.failed) {
       return Row(
         children: [
           Icon(Icons.error, color: Colors.red.shade600),
@@ -1095,10 +1051,11 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              setState(() => _zipDownloads.remove(dataset.name));
-              _startZipDownload(dataset);
-            },
+            onPressed: () => _archiveDownloads.retryDownload(
+              datasetName: dataset.name,
+              url: dataset.zipUrl!,
+              expectedSize: dataset.sizeBytes,
+            ),
             child: const Text('Retry'),
           ),
         ],
@@ -1141,11 +1098,7 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
     );
   }
 
-  Widget _buildZipProgress(_DojDataset dataset, _DownloadProgress progress) {
-    final percent = progress.totalBytes > 0
-        ? progress.bytesReceived / progress.totalBytes
-        : 0.0;
-
+  Widget _buildZipProgress(_DojDataset dataset, ArchiveDownloadProgress progress) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1153,13 +1106,13 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
           children: [
             Expanded(
               child: LinearProgressIndicator(
-                value: percent,
+                value: progress.progress,
                 backgroundColor: Colors.grey.shade300,
               ),
             ),
             const SizedBox(width: 12),
             Text(
-              '${(percent * 100).toStringAsFixed(1)}%',
+              '${progress.progressPercent}%',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -1173,13 +1126,57 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
             ),
             const Spacer(),
             TextButton(
-              onPressed: () {
-                setState(() => _zipDownloads.remove(dataset.name));
-              },
+              onPressed: () => _archiveDownloads.cancelDownload(dataset.name),
               child: const Text('Cancel'),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildExtractionProgress(_DojDataset dataset, ArchiveDownloadProgress progress) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.unarchive, size: 20, color: Colors.purple.shade600),
+            const SizedBox(width: 8),
+            const Text(
+              'Extracting files...',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: LinearProgressIndicator(
+                value: progress.totalFiles > 0 ? progress.progress : null,
+                backgroundColor: Colors.grey.shade300,
+                color: Colors.purple,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              progress.totalFiles > 0
+                  ? '${progress.extractedFiles}/${progress.totalFiles}'
+                  : 'Reading...',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        if (progress.currentFile != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            progress.currentFile!,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ],
     );
   }
@@ -1259,23 +1256,5 @@ class _DojDataset {
     required this.sizeBytes,
     required this.description,
     required this.zipAvailable,
-  });
-}
-
-enum _DownloadStatus { downloading, completed, failed }
-
-class _DownloadProgress {
-  final int bytesReceived;
-  final int totalBytes;
-  final _DownloadStatus status;
-  final String? filePath;
-  final String? error;
-
-  const _DownloadProgress({
-    required this.bytesReceived,
-    required this.totalBytes,
-    required this.status,
-    this.filePath,
-    this.error,
   });
 }

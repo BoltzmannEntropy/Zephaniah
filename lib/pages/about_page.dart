@@ -233,6 +233,13 @@ class AboutPage extends StatelessWidget {
                   color: colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                'Copyright 2026 Qneura.ai',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
               const SizedBox(height: 32),
             ],
           ),

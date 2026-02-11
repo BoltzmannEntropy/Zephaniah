@@ -36,15 +36,15 @@ class _ViewerPageState extends State<ViewerPage> {
     _player = Player();
     _videoController = VideoController(_player);
     await _player.open(Media(widget.artifact.filePath));
-    setState(() => _isMediaInitialized = true);
+    if (mounted) {
+      setState(() => _isMediaInitialized = true);
+    }
   }
 
   @override
   void dispose() {
-    final ext = widget.artifact.filePath.split('.').last.toLowerCase();
-    final isAudio = widget.artifact.isAudio || ['mp3', 'wav', 'aac', 'm4a'].contains(ext);
-    final isVideo = widget.artifact.isVideo || ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
-    if (isAudio || isVideo) {
+    // Only dispose player if it was actually initialized
+    if (_isMediaInitialized) {
       _player.dispose();
     }
     super.dispose();

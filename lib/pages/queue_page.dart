@@ -12,20 +12,23 @@ class QueuePage extends StatefulWidget {
 class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMixin {
   final DownloadService _download = DownloadService();
   final Aria2Service _aria2 = Aria2Service();
+  final ArchiveDownloadService _archiveDownloads = ArchiveDownloadService();
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _download.addListener(_onDownloadChanged);
     _aria2.addListener(_onDownloadChanged);
+    _archiveDownloads.addListener(_onDownloadChanged);
   }
 
   @override
   void dispose() {
     _download.removeListener(_onDownloadChanged);
     _aria2.removeListener(_onDownloadChanged);
+    _archiveDownloads.removeListener(_onDownloadChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -42,6 +45,7 @@ class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMix
     final httpQueue = _download.queue;
     final httpCompleted = _download.completed;
     final torrents = _aria2.torrents.values.toList();
+    final archiveDownloads = _archiveDownloads.downloads;
 
     // HTTP stats
     final httpDownloading = httpQueue.where((t) => t.status == DownloadStatus.downloading).toList();
@@ -51,6 +55,14 @@ class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMix
     // Torrent stats
     final torrentActive = torrents.where((t) => t.isActive).length;
     final torrentComplete = torrents.where((t) => t.isComplete).length;
+
+    // Archive stats
+    final archiveActive = archiveDownloads.values
+        .where((p) => p.status == ArchiveDownloadStatus.downloading).length;
+    final archiveComplete = archiveDownloads.values
+        .where((p) => p.status == ArchiveDownloadStatus.completed).length;
+    final archiveFailed = archiveDownloads.values
+        .where((p) => p.status == ArchiveDownloadStatus.failed).length;
 
     return Column(
       children: [
@@ -75,22 +87,22 @@ class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMix
               // Combined stats
               _StatBadge(
                 icon: Icons.downloading,
-                count: httpDownloading.length + torrentActive,
+                count: httpDownloading.length + torrentActive + archiveActive,
                 color: Colors.blue,
                 label: 'Active',
               ),
               const SizedBox(width: 12),
               _StatBadge(
                 icon: Icons.check_circle,
-                count: httpCompleted.length + torrentComplete,
+                count: httpCompleted.length + torrentComplete + archiveComplete,
                 color: Colors.green,
                 label: 'Done',
               ),
-              if (httpFailed.isNotEmpty) ...[
+              if (httpFailed.isNotEmpty || archiveFailed > 0) ...[
                 const SizedBox(width: 12),
                 _StatBadge(
                   icon: Icons.error,
-                  count: httpFailed.length,
+                  count: httpFailed.length + archiveFailed,
                   color: Colors.red,
                   label: 'Failed',
                 ),
@@ -102,6 +114,34 @@ class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMix
         TabBar(
           controller: _tabController,
           tabs: [
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.archive, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Archives'),
+                  if (archiveDownloads.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${archiveDownloads.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             Tab(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -166,6 +206,7 @@ class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMix
           child: TabBarView(
             controller: _tabController,
             children: [
+              _buildArchiveTab(archiveDownloads),
               _buildHttpTab(httpQueue, httpCompleted, httpDownloading, httpQueued, httpFailed),
               _buildTorrentTab(torrents),
             ],
@@ -435,6 +476,112 @@ class _QueuePageState extends State<QueuePage> with SingleTickerProviderStateMix
     for (final task in failed) {
       _download.retry(task.id);
     }
+  }
+
+  Widget _buildArchiveTab(Map<String, ArchiveDownloadProgress> downloads) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (downloads.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.archive_outlined,
+              size: 64,
+              color: colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No archive downloads',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Download datasets from the Archives tab',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final downloading = downloads.entries
+        .where((e) => e.value.status == ArchiveDownloadStatus.downloading)
+        .toList();
+    final extracting = downloads.entries
+        .where((e) => e.value.status == ArchiveDownloadStatus.extracting)
+        .toList();
+    final completed = downloads.entries
+        .where((e) => e.value.status == ArchiveDownloadStatus.completed)
+        .toList();
+    final failed = downloads.entries
+        .where((e) => e.value.status == ArchiveDownloadStatus.failed)
+        .toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Actions bar
+        if (completed.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _archiveDownloads.clearCompleted(),
+                  icon: const Icon(Icons.clear_all),
+                  label: const Text('Clear Done'),
+                ),
+              ],
+            ),
+          ),
+        // Downloading
+        if (downloading.isNotEmpty) ...[
+          _SectionHeader(title: 'Downloading', count: downloading.length, color: Colors.blue),
+          ...downloading.map((e) => _ArchiveDownloadCard(
+            name: e.key,
+            progress: e.value,
+            onCancel: () => _archiveDownloads.cancelDownload(e.key),
+          )),
+          const SizedBox(height: 16),
+        ],
+        // Extracting
+        if (extracting.isNotEmpty) ...[
+          _SectionHeader(title: 'Extracting', count: extracting.length, color: Colors.purple),
+          ...extracting.map((e) => _ArchiveDownloadCard(
+            name: e.key,
+            progress: e.value,
+          )),
+          const SizedBox(height: 16),
+        ],
+        // Failed
+        if (failed.isNotEmpty) ...[
+          _SectionHeader(title: 'Failed', count: failed.length, color: Colors.red),
+          ...failed.map((e) => _ArchiveDownloadCard(
+            name: e.key,
+            progress: e.value,
+            onClear: () => _archiveDownloads.clearDownload(e.key),
+          )),
+          const SizedBox(height: 16),
+        ],
+        // Completed
+        if (completed.isNotEmpty) ...[
+          _SectionHeader(title: 'Completed', count: completed.length, color: Colors.green),
+          ...completed.map((e) => _ArchiveDownloadCard(
+            name: e.key,
+            progress: e.value,
+            onClear: () => _archiveDownloads.clearDownload(e.key),
+          )),
+        ],
+      ],
+    );
   }
 }
 
@@ -942,6 +1089,221 @@ class _TorrentCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ArchiveDownloadCard extends StatelessWidget {
+  final String name;
+  final ArchiveDownloadProgress progress;
+  final VoidCallback? onCancel;
+  final VoidCallback? onClear;
+
+  const _ArchiveDownloadCard({
+    required this.name,
+    required this.progress,
+    this.onCancel,
+    this.onClear,
+  });
+
+  Color _getStatusColor() {
+    switch (progress.status) {
+      case ArchiveDownloadStatus.downloading:
+        return Colors.blue;
+      case ArchiveDownloadStatus.extracting:
+        return Colors.purple;
+      case ArchiveDownloadStatus.queued:
+        return Colors.orange;
+      case ArchiveDownloadStatus.completed:
+        return Colors.green;
+      case ArchiveDownloadStatus.failed:
+        return Colors.red;
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (progress.status) {
+      case ArchiveDownloadStatus.downloading:
+        return Icons.downloading;
+      case ArchiveDownloadStatus.extracting:
+        return Icons.unarchive;
+      case ArchiveDownloadStatus.queued:
+        return Icons.hourglass_empty;
+      case ArchiveDownloadStatus.completed:
+        return Icons.check_circle;
+      case ArchiveDownloadStatus.failed:
+        return Icons.error;
+    }
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final statusColor = _getStatusColor();
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // Status icon
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getStatusIcon(),
+                    color: statusColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Title and info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Archive',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Internet Archive Dataset',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Progress/Size
+                if (progress.status == ArchiveDownloadStatus.downloading ||
+                    progress.status == ArchiveDownloadStatus.completed)
+                  Text(
+                    '${_formatBytes(progress.bytesReceived)} / ${_formatBytes(progress.totalBytes)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                // Actions
+                if (onCancel != null)
+                  IconButton(
+                    onPressed: onCancel,
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Cancel',
+                    iconSize: 20,
+                    color: Colors.red,
+                  ),
+                if (onClear != null)
+                  IconButton(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.clear),
+                    tooltip: 'Clear',
+                    iconSize: 20,
+                  ),
+              ],
+            ),
+            // Progress bar for downloading
+            if (progress.status == ArchiveDownloadStatus.downloading) ...[
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: progress.progress,
+                backgroundColor: colorScheme.surfaceContainerLow,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${progress.progressPercent}% - Downloading',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+            // Progress bar for extracting
+            if (progress.status == ArchiveDownloadStatus.extracting) ...[
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: progress.totalFiles > 0 ? progress.progress : null,
+                backgroundColor: colorScheme.surfaceContainerLow,
+                color: Colors.purple,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                progress.statusText,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.purple,
+                ),
+              ),
+            ],
+            // Error message for failed
+            if (progress.status == ArchiveDownloadStatus.failed && progress.error != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, size: 16, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        progress.error!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.red,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
