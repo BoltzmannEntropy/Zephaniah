@@ -307,6 +307,275 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
+  Widget _buildArchiveStatusSection(ThemeData theme, ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.archive, size: 18, color: colorScheme.primary),
+            const SizedBox(width: 8),
+            Text(
+              'Archives',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '(click to extract)',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 90,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: Datasets.all.length,
+            itemBuilder: (context, index) {
+              final dataset = Datasets.all[index];
+              final status = _datasetStatuses[dataset.name];
+              return _buildArchiveCard(dataset, status, theme, colorScheme);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArchiveCard(
+    Dataset dataset,
+    DatasetExtractionStatus? status,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    final isExtracted = status?.isExtracted ?? false;
+    final isDownloading = status?.isDownloading ?? false;
+    final progress = status?.progress ?? 0.0;
+    final fileCount = status?.fileCount ?? 0;
+
+    Color cardColor;
+    Color textColor;
+    IconData statusIcon;
+
+    if (isExtracted) {
+      cardColor = Colors.green.shade100;
+      textColor = Colors.green.shade800;
+      statusIcon = Icons.check_circle;
+    } else if (isDownloading) {
+      cardColor = Colors.orange.shade100;
+      textColor = Colors.orange.shade800;
+      statusIcon = Icons.downloading;
+    } else {
+      cardColor = Colors.grey.shade200;
+      textColor = Colors.grey.shade700;
+      statusIcon = Icons.cloud_download_outlined;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: InkWell(
+        onTap: isDownloading
+            ? null
+            : isExtracted
+                ? () => _library.setDatasetFilter(dataset.name)
+                : () => _startDownload(dataset),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 100,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isExtracted ? Colors.green.shade300 :
+                     isDownloading ? Colors.orange.shade300 : Colors.grey.shade300,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isDownloading)
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    value: progress > 0 ? progress : null,
+                    strokeWidth: 2,
+                    color: textColor,
+                  ),
+                )
+              else
+                Icon(statusIcon, color: textColor, size: 24),
+              const SizedBox(height: 6),
+              Text(
+                dataset.number <= 12 ? 'DS ${dataset.number}' : 'Struct',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+              Text(
+                dataset.sizeFormatted,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: textColor.withValues(alpha: 0.8),
+                ),
+              ),
+              if (isExtracted && fileCount > 0)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$fileCount',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade800,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startDownload(Dataset dataset) async {
+    if (dataset.zipUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${dataset.name} requires torrent download. Go to Archives tab.'),
+          action: SnackBarAction(
+            label: 'OK',
+            onPressed: () {},
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Confirm large downloads
+    if (dataset.isLarge) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Large Download'),
+          content: Text(
+            '${dataset.name} is ${dataset.sizeFormatted}. This may take a while. Continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Download'),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+    }
+
+    await _archiveDownloads.startDownload(
+      datasetName: dataset.name,
+      url: dataset.zipUrl!,
+      expectedSize: dataset.sizeBytes,
+    );
+  }
+
+  Widget _buildTypeFilterChips(ThemeData theme, ColorScheme colorScheme, LibraryStats stats) {
+    final types = [
+      ('All', null, Colors.grey, stats.totalFiles),
+      ('PDF', 'pdf', Colors.red, stats.typeCounts['pdf'] ?? 0),
+      ('Images', 'image', Colors.blue, stats.typeCounts['image'] ?? 0),
+      ('Audio', 'audio', Colors.purple, stats.typeCounts['audio'] ?? 0),
+      ('Video', 'video', Colors.orange, stats.typeCounts['video'] ?? 0),
+      ('Documents', 'document', Colors.teal, stats.typeCounts['document'] ?? 0),
+      ('Spreadsheets', 'spreadsheet', Colors.green, stats.typeCounts['spreadsheet'] ?? 0),
+    ];
+
+    return Row(
+      children: [
+        Text(
+          'Filter:',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: types.map((type) {
+                final (label, value, color, count) = type;
+                final isSelected = _library.currentFileType == value;
+
+                if (value != null && count == 0) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    selected: isSelected,
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (value != null)
+                          Icon(
+                            _getTypeIcon(value),
+                            size: 14,
+                            color: isSelected ? Colors.white : color,
+                          ),
+                        if (value != null) const SizedBox(width: 4),
+                        Text(label),
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.white.withValues(alpha: 0.3)
+                                : color.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$count',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    selectedColor: color,
+                    checkmarkColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : colorScheme.onSurface,
+                    ),
+                    onSelected: (_) => _library.setTypeFilter(isSelected ? null : value),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildGridView(List<LibraryFile> files) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),

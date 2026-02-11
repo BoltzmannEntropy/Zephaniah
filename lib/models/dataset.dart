@@ -1,6 +1,4 @@
-/// Shared dataset definitions for Epstein Files archives
-/// Used by both Archives page and Library page
-
+/// Dataset model for Epstein Files archives
 class Dataset {
   final int number;
   final String name;

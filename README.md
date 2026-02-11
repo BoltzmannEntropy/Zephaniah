@@ -30,11 +30,14 @@ A desktop application for **macOS, Windows, and Linux** focused on discovering a
 
 | Category | Agencies |
 |----------|----------|
-| **Law Enforcement** | FBI Vault, DEA, US Marshals, ICE, ATF |
-| **Justice** | Department of Justice, Federal Courts, Supreme Court, CourtListener |
+| **Law Enforcement** | FBI, DEA, US Marshals, ICE, ATF |
+| **Justice** | Department of Justice, Federal Courts (PACER), Supreme Court, CourtListener |
 | **Intelligence** | CIA Reading Room, DNI, NSA |
 | **Financial** | SEC, FinCEN, Treasury, IRS |
-| **State/Diplomatic** | State Department archives |
+| **State/Diplomatic** | State Department, FOIA.gov |
+| **Archives** | National Archives, Library of Congress, GovInfo |
+| **Legislative** | Congress.gov, Senate, House of Representatives |
+| **International** | Interpol, UK Government, UK Judiciary |
 
 ![Archives](assets/01-archives.png)
 
@@ -53,7 +56,7 @@ Download all Epstein Files datasets directly from Internet Archive and Google Dr
 ![Search](assets/02-search.png)
 
 ### Multi-Agency Discovery
-Search 15+ government agencies for additional documents. Filter by institution, time range, and file type. Uses DuckDuckGo for privacy-focused searches.
+Search 27 government agencies for additional documents. Filter by institution, time range, and file type. Uses DuckDuckGo for privacy-focused searches.
 
 ![Results](assets/03-results.png)
 
