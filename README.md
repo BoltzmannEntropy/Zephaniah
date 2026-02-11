@@ -100,10 +100,10 @@ Download multiple documents simultaneously with real-time progress tracking. **D
 
 ![Settings](assets/06-settings.png)
 
-### About Page
-View app information, version, and quick links to archive sources. Clickable chips link directly to Internet Archive, Google Drive, GitHub, and Reddit.
+### Library with Datasets
+Browse 1000+ extracted files across multiple datasets. Filter by file type (PDF, Video) or search by filename.
 
-![About](assets/07-about.png)
+![Library Full](assets/07-library-full.png)
 
 ---
 
