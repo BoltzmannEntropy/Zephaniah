@@ -22,22 +22,47 @@
   <br><br>
 </div>
 
-> **Document Discovery** | **Multi-Agency** | **PDF Viewer** | **Media Player** | **Download Queue**
+> **Archive Downloads** | **Auto-Extract** | **PDF Viewer** | **Media Player** | **Library Browser**
 
-A desktop application for **macOS, Windows, and Linux** focused on discovering and downloading declassified documents related to the **Jeffrey Epstein case**. The app helps you find and download files from government sources—it does **not** search within document contents. Query multiple agencies simultaneously, filter by file type (PDF, DOC, XLS, media files), and build a local archive of relevant documents.
+A desktop application for **macOS, Windows, and Linux** to download and browse the **Epstein Files** archive. Downloads datasets directly from Internet Archive and Google Drive, automatically extracts ZIP files, and provides a library viewer for PDFs, documents, and media files.
 
-### Supported Institutions
+### Archive Sources
 
-| Category | Agencies |
-|----------|----------|
-| **Law Enforcement** | FBI, DEA, US Marshals, ICE, ATF |
-| **Justice** | Department of Justice, Federal Courts (PACER), Supreme Court, CourtListener |
-| **Intelligence** | CIA Reading Room, DNI, NSA |
-| **Financial** | SEC, FinCEN, Treasury, IRS |
-| **State/Diplomatic** | State Department, FOIA.gov |
-| **Archives** | National Archives, Library of Congress, GovInfo |
-| **Legislative** | Congress.gov, Senate, House of Representatives |
-| **International** | Interpol, UK Government, UK Judiciary |
+| Source | Description | Link |
+|--------|-------------|------|
+| **Internet Archive** | Primary source - All 13 datasets | [archive.org/download/Epstein-Data-Sets-So-Far](https://archive.org/download/Epstein-Data-Sets-So-Far) |
+| **Google Drive** | Community backup folder | [Google Drive Folder](https://drive.google.com/drive/folders/18tIY9QEGUZe0q_AFAxoPnnVBCWbqHm2p) |
+| **GitHub Index** | Community-maintained links | [yung-megafone/Epstein-Files](https://github.com/yung-megafone/Epstein-Files) |
+| **Reddit** | Discussion & updates | [r/Epstein](https://www.reddit.com/r/Epstein/) |
+
+### Available Datasets
+
+| Dataset | Size | ZIP | Torrent | Description |
+|---------|------|-----|---------|-------------|
+| DataSet 1 | 2.5 GB | Yes | - | FBI Vault documents - Part 1 |
+| DataSet 2 | 631 MB | Yes | - | FBI Vault documents - Part 2 |
+| DataSet 3 | 599 MB | Yes | - | FBI Vault documents - Part 3 |
+| DataSet 4 | 358 MB | Yes | - | FBI Vault documents - Part 4 |
+| DataSet 5 | 61.5 MB | Yes | - | FBI Vault documents - Part 5 |
+| DataSet 6 | 53 MB | Yes | - | FBI Vault documents - Part 6 |
+| DataSet 7 | 98 MB | Yes | - | FBI Vault documents - Part 7 |
+| DataSet 8 | 10.7 GB | Yes | - | FBI Vault documents - Part 8 |
+| DataSet 9 | 96.3 GB | Yes | Yes | FBI Vault documents - Part 9 |
+| DataSet 10 | 82 GB | Yes | Yes | FBI Vault documents - Part 10 |
+| DataSet 11 | 27.5 GB | Yes | Yes | FBI Vault documents - Part 11 |
+| DataSet 12 | 114 MB | Yes | - | FBI Vault documents - Part 12 |
+| Structured Dataset | 5 GB | - | Yes | Community organized files |
+
+**Total Archive Size: ~225 GB**
+
+### Magnet Links (for external torrent clients)
+
+```
+DataSet 9:  magnet:?xt=urn:btih:7ac8f771678d19c75a26ea6c14e7d4c003fbf9b6&dn=DataSet9
+DataSet 10: magnet:?xt=urn:btih:d509cc4ca1a415a9ba3b6cb920f67c44aed7fe1f&dn=DataSet10
+DataSet 11: magnet:?xt=urn:btih:59975667f8bdd5baf9945b0e2db8a57d52d32957&dn=DataSet11
+Structured: magnet:?xt=urn:btih:f5cbe5026b1f86617c520d0a9cd610d6254cbe85&dn=StructuredDataset
+```
 
 ![Archives](assets/01-archives.png)
 
@@ -53,15 +78,15 @@ Download all Epstein Files datasets directly from Internet Archive and Google Dr
 - **Automatic ZIP extraction** with progress tracking
 - Files organized by dataset in the Library
 
-![Search](assets/02-search.png)
+![Library](assets/05-library.png)
 
-### Multi-Agency Discovery
-Search 27 government agencies for additional documents. Filter by institution, time range, and file type. Uses DuckDuckGo for privacy-focused searches.
+### Library Viewer
+Browse all downloaded and extracted files in a gallery view. Filter by dataset, file type, or search by filename.
 
-![Results](assets/03-results.png)
-
-### Search Results
-Browse search results with direct download links. View source URLs, file sizes, and add items to the download queue.
+- Grid and list view modes
+- PDF thumbnail generation
+- Built-in PDF viewer (Syncfusion)
+- Integrated media player for audio/video files
 
 ![Queue](assets/04-queue.png)
 
@@ -73,13 +98,7 @@ Download multiple documents simultaneously with real-time progress tracking. **D
 - Torrent downloads via aria2c integration
 - Configure up to 10 concurrent downloads with automatic retry
 
-### Library Viewer
-Browse all downloaded and extracted files in a gallery view. Filter by dataset, file type, or search by filename.
-
-- Grid and list view modes
-- PDF thumbnail generation
-- Built-in PDF viewer (Syncfusion)
-- Integrated media player for audio/video files
+![Settings](assets/06-settings.png)
 
 ---
 
@@ -158,17 +177,16 @@ flutter build macos --release
 
 ## Usage
 
-### Discovery Interface
+### Archives Page
 
-The app helps you **find and download** documents from government websites—it does not search within document contents.
+Download datasets directly from Internet Archive:
 
-1. Enter search terms in the search bar (e.g., "Jeffrey Epstein", "Flight Logs")
-2. Select quick tags to refine your query
-3. Choose search engine (DuckDuckGo recommended for privacy)
-4. Set time range filter (Last month, Last year, All time)
-5. Select file types (PDF, DOC, XLS, media)
-6. Filter by institution category
-7. Click Search to find downloadable files
+1. Browse the list of available datasets (1-12 + Structured Dataset)
+2. Click **ZIP** to download via HTTP (recommended for datasets under 10GB)
+3. Click **Torrent** to download via aria2c (recommended for large datasets)
+4. Click **Magnet** to copy the magnet link for use with an external torrent client
+5. Downloads are **automatically extracted** after completion
+6. Extracted files appear immediately in the Library
 
 ### Download Queue
 
@@ -238,17 +256,13 @@ Zephaniah/
 
 ## Privacy & Legal
 
-Zephaniah searches **publicly available** government documents. All queried sources are official public record repositories:
+Zephaniah downloads **publicly available** documents from community archives:
 
-- FBI Vault (vault.fbi.gov)
-- DOJ documents (justice.gov)
-- Federal Court records (uscourts.gov, supremecourt.gov)
-- CourtListener (courtlistener.com)
-- CIA Reading Room (cia.gov)
-- SEC filings (sec.gov)
-- Treasury documents (treasury.gov)
+- **Internet Archive** (archive.org) - Primary source for all datasets
+- **Google Drive** - Community-maintained backup folder
+- **BitTorrent** - Distributed peer-to-peer downloads
 
-**No private data is accessed.** The application uses standard search engine APIs to find publicly released documents.
+All documents are declassified public records originally released by government agencies. **No private data is accessed.** The application downloads directly from public archives without requiring accounts or tracking.
 
 ---
 
