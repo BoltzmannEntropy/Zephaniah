@@ -100,6 +100,11 @@ Download multiple documents simultaneously with real-time progress tracking. **D
 
 ![Settings](assets/06-settings.png)
 
+### About Page
+View app information, version, and quick links to archive sources. Clickable chips link directly to Internet Archive, Google Drive, GitHub, and Reddit.
+
+![About](assets/07-about.png)
+
 ---
 
 ## Installation

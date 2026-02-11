@@ -1,33 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../version.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
+  static const String _websiteUrl =
+      'https://boltzmannentropy.github.io/zephaniah.github.io/';
+  static const String _githubUrl =
+      'https://github.com/BoltzmannEntropy/Zephaniah';
+  static const String _issuesUrl =
+      'https://github.com/BoltzmannEntropy/Zephaniah/issues';
+
+  // Archive source URLs
+  static const Map<String, String> _sourceUrls = {
+    'Internet Archive': 'https://archive.org/download/Epstein-Data-Sets-So-Far',
+    'Google Drive': 'https://drive.google.com/drive/folders/18tIY9QEGUZe0q_AFAxoPnnVBCWbqHm2p',
+    'GitHub Index': 'https://github.com/yung-megafone/Epstein-Files',
+    'Reddit': 'https://www.reddit.com/r/Epstein/',
+  };
+
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 32),
               // Logo
               Container(
-                width: 100,
-                height: 100,
+                width: 120,
+                height: 120,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFF8F00),
                   borderRadius: BorderRadius.circular(24),
@@ -40,13 +55,14 @@ class AboutPage extends StatelessWidget {
                   ],
                 ),
                 child: const Icon(
-                  Icons.search_rounded,
+                  Icons.archive_rounded,
+                  size: 64,
                   color: Colors.white,
-                  size: 50,
                 ),
               ),
               const SizedBox(height: 24),
-              // Title
+
+              // App name
               Text(
                 'Zephaniah',
                 style: theme.textTheme.headlineLarge?.copyWith(
@@ -54,141 +70,141 @@ class AboutPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
+
+              // Version
               Text(
-                'Version 1.0.0',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                'Version $appVersion',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 24),
+              Text(
+                versionName,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Description
               Text(
-                'Public document search and archival tool for investigating institutional records.',
+                'Epstein Files Archive Downloader & Library',
                 style: theme.textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
 
-              // Features
+              // Links section
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Features',
+                        'Links',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _FeatureItem(
-                        icon: Icons.search,
-                        title: 'Multi-Source Search',
-                        description:
-                            'Search across multiple government and institutional sources',
+                      FilledButton.icon(
+                        onPressed: () => _launchUrl(_websiteUrl),
+                        icon: const Icon(Icons.language),
+                        label: const Text('Website'),
                       ),
-                      _FeatureItem(
-                        icon: Icons.download,
-                        title: 'Bulk Download',
-                        description:
-                            'Download multiple documents with queue management',
+                      const SizedBox(height: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: () => _launchUrl(_githubUrl),
+                        icon: const Icon(Icons.code),
+                        label: const Text('GitHub'),
                       ),
-                      _FeatureItem(
-                        icon: Icons.camera_alt,
-                        title: 'Daily Snapshots',
-                        description:
-                            'Automated daily archival of new documents',
-                      ),
-                      _FeatureItem(
-                        icon: Icons.picture_as_pdf,
-                        title: 'Integrated Viewer',
-                        description:
-                            'View PDFs, audio, and video files in-app',
-                      ),
-                      _FeatureItem(
-                        icon: Icons.extension,
-                        title: 'MCP Extensible',
-                        description:
-                            'Add custom search providers via MCP protocol',
+                      const SizedBox(height: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: () => _launchUrl(_issuesUrl),
+                        icon: const Icon(Icons.bug_report),
+                        label: const Text('Report Issue'),
                       ),
                     ],
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
 
-              // Licenses
+              // Archive Sources section
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.gavel,
-                            size: 20,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Licenses & Credits',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Archive Sources',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Click to visit data sources',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      _LicenseItem(
-                        name: 'PDF Viewer',
-                        library: 'Syncfusion Flutter PDF Viewer',
-                        license: 'Syncfusion Community License',
-                        note:
-                            'Free for individuals and businesses with less than \$1M annual revenue.',
-                        onTap: () =>
-                            _launchUrl('https://www.syncfusion.com/license'),
-                      ),
-                      const Divider(height: 24),
-                      _LicenseItem(
-                        name: 'Media Player',
-                        library: 'media_kit',
-                        license: 'MIT License',
-                        onTap: () => _launchUrl(
-                            'https://github.com/media-kit/media-kit'),
-                      ),
-                      const Divider(height: 24),
-                      _LicenseItem(
-                        name: 'Database',
-                        library: 'SQLite',
-                        license: 'Public Domain',
-                        onTap: () =>
-                            _launchUrl('https://www.sqlite.org/copyright.html'),
-                      ),
-                      const Divider(height: 24),
-                      _LicenseItem(
-                        name: 'Framework',
-                        library: 'Flutter',
-                        license: 'BSD 3-Clause License',
-                        onTap: () => _launchUrl(
-                            'https://github.com/flutter/flutter/blob/master/LICENSE'),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildSourceChip('Internet Archive', Colors.blue, _sourceUrls['Internet Archive']!),
+                          _buildSourceChip('Google Drive', Colors.amber.shade700, _sourceUrls['Google Drive']!),
+                          _buildSourceChip('GitHub Index', Colors.grey.shade700, _sourceUrls['GitHub Index']!),
+                          _buildSourceChip('Reddit', Colors.deepOrange, _sourceUrls['Reddit']!),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
 
+              // Powered By section
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Powered By',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildTechChip('Flutter', Colors.blue, 'https://flutter.dev'),
+                          _buildTechChip('Syncfusion PDF', Colors.teal, 'https://pub.dev/packages/syncfusion_flutter_pdfviewer'),
+                          _buildTechChip('media_kit', Colors.purple, 'https://pub.dev/packages/media_kit'),
+                          _buildTechChip('SQLite', Colors.green, 'https://sqlite.org'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
 
               // Disclaimer
               Card(
                 color: Colors.amber.withValues(alpha: 0.1),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -211,10 +227,9 @@ class AboutPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'This application is designed for legitimate research and journalistic purposes. '
-                        'Users are responsible for complying with all applicable laws and terms of service '
-                        'when accessing and downloading public documents. The developers assume no liability '
-                        'for misuse of this tool.',
+                        'This application downloads publicly available documents from community archives. '
+                        'Users are responsible for complying with all applicable laws. '
+                        'The developers assume no liability for misuse of this tool.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.amber.shade900,
                         ),
@@ -224,160 +239,63 @@ class AboutPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
 
               // Footer
+              const Divider(),
+              const SizedBox(height: 16),
               Text(
-                'Built with Flutter',
+                'Licensed under MIT License',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Copyright 2026 Qneura.ai',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FeatureItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _FeatureItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LicenseItem extends StatelessWidget {
-  final String name;
-  final String library;
-  final String license;
-  final String? note;
-  final VoidCallback onTap;
-
-  const _LicenseItem({
-    required this.name,
-    required this.library,
-    required this.license,
-    this.note,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  name,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.open_in_new,
-                  size: 16,
-                  color: colorScheme.primary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              library,
-              style: theme.textTheme.bodyMedium,
-            ),
-            Text(
-              license,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.primary,
-              ),
-            ),
-            if (note != null) ...[
               const SizedBox(height: 4),
               Text(
-                note!,
+                '2026 Shlomo Kashani / Qneura.ai',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSourceChip(String label, Color color, String url) {
+    return ActionChip(
+      onPressed: () => _launchUrl(url),
+      avatar: Icon(Icons.open_in_new, size: 16, color: Colors.white.withValues(alpha: 0.9)),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      backgroundColor: color,
+      side: BorderSide.none,
+      tooltip: 'Open $label',
+    );
+  }
+
+  Widget _buildTechChip(String label, Color color, String url) {
+    return ActionChip(
+      onPressed: () => _launchUrl(url),
+      avatar: Icon(Icons.open_in_new, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
+      ),
+      backgroundColor: color.withValues(alpha: 0.8),
+      side: BorderSide.none,
+      tooltip: 'Visit $label',
     );
   }
 }
