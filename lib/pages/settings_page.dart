@@ -344,11 +344,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       OutlinedButton.icon(
                         onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
                           await _db.cleanupOldArtifacts(
                               _currentSettings.snapshotRetentionDays);
                           _loadStats();
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               const SnackBar(
                                   content: Text('Old artifacts cleaned')),
                             );
@@ -360,9 +361,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       const SizedBox(width: 8),
                       OutlinedButton.icon(
                         onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
                           final file = await LogService().exportToFile();
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                   content: Text(
                                       'Logs exported to ${file?.path ?? "N/A"}')),

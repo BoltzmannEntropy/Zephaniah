@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/services.dart';
-import '../providers/providers.dart';
 import '../widgets/institution_card.dart';
 import 'results_page.dart';
 
@@ -16,7 +15,6 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   final SearchService _search = SearchService();
-  final SnapshotService _snapshot = SnapshotService();
   final SettingsService _settings = SettingsService();
 
   Set<String> _selectedInstitutions = {};
@@ -63,7 +61,6 @@ class _SearchPageState extends State<SearchPage> {
     _loadInstitutions();
     _loadDefaults();
     _search.addListener(_onSearchChanged);
-    _snapshot.addListener(_onSnapshotChanged);
     _searchController.addListener(_onTextChanged);
   }
 
@@ -76,7 +73,6 @@ class _SearchPageState extends State<SearchPage> {
     _searchController.removeListener(_onTextChanged);
     _searchController.dispose();
     _search.removeListener(_onSearchChanged);
-    _snapshot.removeListener(_onSnapshotChanged);
     super.dispose();
   }
 
@@ -84,16 +80,14 @@ class _SearchPageState extends State<SearchPage> {
     if (mounted) setState(() => _isSearching = _search.isSearching);
   }
 
-  void _onSnapshotChanged() {
-    if (mounted) setState(() {});
-  }
-
   Future<void> _loadInstitutions() async {
     final db = DatabaseService();
     final custom = await db.getCustomInstitutions();
-    setState(() {
-      _allInstitutions = [...DefaultInstitutions.all, ...custom];
-    });
+    if (mounted) {
+      setState(() {
+        _allInstitutions = [...DefaultInstitutions.all, ...custom];
+      });
+    }
   }
 
   void _loadDefaults() {
@@ -155,33 +149,6 @@ class _SearchPageState extends State<SearchPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Search failed: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _runSnapshot() async {
-    try {
-      await _snapshot.runDailySnapshot(
-        customTerms: _searchController.text.isNotEmpty
-            ? _searchController.text
-            : null,
-        customInstitutions: _selectedInstitutions.isNotEmpty
-            ? _allInstitutions
-                .where((i) => _selectedInstitutions.contains(i.id))
-                .toList()
-            : null,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Daily snapshot completed')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Snapshot failed: $e')),
         );
       }
     }
@@ -396,29 +363,20 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ),
                   const Spacer(),
-                  // Daily Snapshot button
-                  FilledButton.icon(
-                    onPressed: _snapshot.isRunning ? null : _runSnapshot,
-                    icon: _snapshot.isRunning
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.camera_rounded),
-                    label: Text(
-                      _snapshot.isRunning
-                          ? 'Running Snapshot...'
-                          : 'Run Daily Snapshot',
+                  // Secondary feature label
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange.shade300),
                     ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF8F00),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+                    child: Text(
+                      'For new documents not in archives',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange.shade800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -623,7 +581,7 @@ class _SearchPageState extends State<SearchPage> {
                   ],
                 ),
               ),
-              // DuckDuckGo rate limit warning
+              // Search engine warnings
               if (_selectedEngine == SearchEngine.duckduckgo)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
@@ -638,6 +596,26 @@ class _SearchPageState extends State<SearchPage> {
                             fontSize: 11,
                             color: Colors.orange.shade700,
                             fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_selectedEngine == SearchEngine.google || _selectedEngine == SearchEngine.bing)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, size: 14, color: Colors.red.shade700),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '${_selectedEngine.label} frequently blocks automated searches with CAPTCHAs. DuckDuckGo is recommended.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

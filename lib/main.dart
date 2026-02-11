@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'services/services.dart';
-import 'models/models.dart';
 import 'widgets/sidebar.dart';
 import 'widgets/download_queue_panel.dart';
 import 'widgets/logs_panel.dart';
+import 'pages/doj_archives_page.dart';
+import 'pages/library_page.dart';
 import 'pages/search_page.dart';
-import 'pages/artifacts_page.dart';
-import 'pages/snapshots_page.dart';
-import 'pages/mcp_page.dart';
 import 'pages/queue_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/about_page.dart';
@@ -22,7 +20,6 @@ void main() async {
   await LogService().initialize();
   await DatabaseService().initialize();
   SearchService().initialize();
-  McpService().initialize();
 
   runApp(const ZephaniahApp());
 }
@@ -84,14 +81,14 @@ class _MainShellState extends State<MainShell> {
   final SettingsService _settings = SettingsService();
   final DownloadService _download = DownloadService();
 
+  // New navigation order: Archives, Library, Search, Queue, Settings, About
   final List<Widget> _pages = [
-    const SearchPage(),
-    const ArtifactsPage(),
-    const SnapshotsPage(),
-    const McpPage(),
-    const QueuePage(),
-    const SettingsPage(),
-    const AboutPage(),
+    const DojArchivesPage(),   // 0: Archives - download DOJ datasets
+    const LibraryPage(),       // 1: Library - gallery view of downloaded files
+    const SearchPage(),        // 2: Search - secondary feature for new documents
+    const QueuePage(),         // 3: Queue - download progress
+    const SettingsPage(),      // 4: Settings
+    const AboutPage(),         // 5: About
   ];
 
   @override

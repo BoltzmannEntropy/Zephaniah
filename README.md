@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/01-search-documents.png" alt="Zephaniah" width="700"/>
+  <img src="assets/01-archives.png" alt="Zephaniah" width="700"/>
   <br><br>
 
   [![GitHub stars](https://img.shields.io/github/stars/BoltzmannEntropy/Zephaniah?style=social)](https://github.com/BoltzmannEntropy/Zephaniah/stargazers)
@@ -16,7 +16,7 @@
 
   <br><br>
   <h1>Jeffrey Epstein Document <i>Discovery & Archive</i></h1>
-  <p>Discover and download declassified documents related to the Jeffrey Epstein case.<br>Find files from FBI Vault, DOJ archives, Federal Courts, and other government agencies.</p>
+  <p>Download the Epstein Files from Internet Archive and Google Drive.<br>Search for additional documents from FBI Vault, Federal Courts, and other government agencies.</p>
   <br>
   <a href="https://boltzmannentropy.github.io/zephaniah.github.io/"><strong>Get Started</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah"><strong>View on GitHub</strong></a>&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;<a href="https://github.com/BoltzmannEntropy/Zephaniah/releases"><strong>Download</strong></a>
   <br><br>
@@ -36,31 +36,29 @@ A desktop application for **macOS, Windows, and Linux** focused on discovering a
 | **Financial** | SEC, FinCEN, Treasury, IRS |
 | **State/Diplomatic** | State Department archives |
 
-![Search Documents](assets/01-search-documents.png)
+![Archives](assets/01-archives.png)
 
 ---
 
 ## Features
 
+### Archive Downloads
+Download all Epstein Files datasets directly from Internet Archive and Google Drive. No CAPTCHA, no restrictions. ZIP downloads and torrent support for large datasets.
+
+![Search](assets/02-search.png)
+
 ### Multi-Agency Discovery
-Find documents from 15+ government agencies simultaneously from a single interface. Advanced filtering by institution category, time range, and file type.
+Search 15+ government agencies for additional documents. Filter by institution, time range, and file type. Uses DuckDuckGo for privacy-focused searches.
 
-![Download Queue](assets/02-download-queue.png)
+![Results](assets/03-results.png)
 
-### Parallel Downloads
+### Search Results
+Browse search results with direct download links. View source URLs, file sizes, and add items to the download queue.
+
+![Queue](assets/04-queue.png)
+
+### Download Queue
 Download multiple documents simultaneously with real-time progress tracking. Configure up to 10 concurrent downloads with automatic retry on failure.
-
-![Artifacts](assets/03-artifacts.png)
-
-### Document Library
-Your downloaded artifacts organized chronologically. Browse with the built-in Syncfusion PDF viewer, play audio/video with the integrated media player, and manage storage with detailed statistics.
-
-![Settings](assets/04-settings.png)
-
-### Fully Customizable
-Configure default search terms, file types, download settings, and snapshot scheduling. Control storage location, concurrent downloads, and auto-run preferences.
-
-![Storage](assets/05-storage.png)
 
 ---
 

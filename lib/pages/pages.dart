@@ -1,9 +1,10 @@
 export 'search_page.dart';
 export 'results_page.dart';
 export 'artifacts_page.dart';
-export 'snapshots_page.dart';
-export 'mcp_page.dart';
+export 'library_page.dart';
+export 'library_viewer_page.dart';
 export 'queue_page.dart';
 export 'settings_page.dart';
 export 'about_page.dart';
 export 'viewer_page.dart';
+export 'doj_archives_page.dart';
