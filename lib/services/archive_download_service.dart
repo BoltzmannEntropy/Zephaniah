@@ -456,4 +456,87 @@ class ArchiveDownloadService extends ChangeNotifier {
     }
     return false;
   }
+
+  /// Get the number of files in an extracted dataset directory
+  Future<int> getExtractedFileCount(String datasetName) async {
+    final dirPath = path.join(archivesDir, datasetName.replaceAll(' ', '_'));
+    try {
+      final dir = Directory(dirPath);
+      if (await dir.exists()) {
+        int count = 0;
+        await for (final entity in dir.list(recursive: true)) {
+          if (entity is File) count++;
+        }
+        return count;
+      }
+    } catch (e) {
+      _log.error('ArchiveDownload', 'Failed to count files: $e');
+    }
+    return 0;
+  }
+
+  /// Get dataset status summary for display in Library
+  Future<DatasetExtractionStatus> getDatasetStatus(String datasetName) async {
+    final isExtractedResult = await isExtracted(datasetName);
+    final progress = getProgress(datasetName);
+
+    if (progress != null) {
+      if (progress.status == ArchiveDownloadStatus.downloading) {
+        return DatasetExtractionStatus(
+          isExtracted: false,
+          isDownloading: true,
+          progress: progress.progress,
+          fileCount: 0,
+        );
+      }
+      if (progress.status == ArchiveDownloadStatus.extracting) {
+        return DatasetExtractionStatus(
+          isExtracted: false,
+          isDownloading: true,
+          progress: progress.progress,
+          fileCount: progress.extractedFiles,
+        );
+      }
+      if (progress.status == ArchiveDownloadStatus.completed) {
+        return DatasetExtractionStatus(
+          isExtracted: true,
+          isDownloading: false,
+          progress: 1.0,
+          fileCount: progress.extractedFiles,
+        );
+      }
+    }
+
+    if (isExtractedResult) {
+      final count = await getExtractedFileCount(datasetName);
+      return DatasetExtractionStatus(
+        isExtracted: true,
+        isDownloading: false,
+        progress: 1.0,
+        fileCount: count,
+      );
+    }
+
+    return const DatasetExtractionStatus(
+      isExtracted: false,
+      isDownloading: false,
+      progress: 0.0,
+      fileCount: 0,
+    );
+  }
+}
+
+/// Status of a dataset's extraction state
+class DatasetExtractionStatus {
+  final bool isExtracted;
+  final bool isDownloading;
+  final double progress;
+  final int fileCount;
+
+  const DatasetExtractionStatus({
+    required this.isExtracted,
+    required this.isDownloading,
+    required this.progress,
+    required this.fileCount,
+  });
 }

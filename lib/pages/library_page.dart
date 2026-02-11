@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../models/dataset.dart';
 import '../services/services.dart';
 import 'library_viewer_page.dart';
 
@@ -13,29 +14,51 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> {
   final LibraryService _library = LibraryService();
   final ThumbnailService _thumbnails = ThumbnailService();
+  final ArchiveDownloadService _archiveDownloads = ArchiveDownloadService();
   final TextEditingController _searchController = TextEditingController();
 
   bool _isGeneratingThumbnails = false;
   int _thumbnailProgress = 0;
   int _thumbnailTotal = 0;
   bool _isGridView = true;
+  Map<String, DatasetExtractionStatus> _datasetStatuses = {};
 
   @override
   void initState() {
     super.initState();
     _library.addListener(_onLibraryChanged);
+    _archiveDownloads.addListener(_onArchiveChanged);
     _loadLibrary();
+    _loadDatasetStatuses();
   }
 
   @override
   void dispose() {
     _library.removeListener(_onLibraryChanged);
+    _archiveDownloads.removeListener(_onArchiveChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onLibraryChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _onArchiveChanged() {
+    if (mounted) {
+      setState(() {});
+      _loadDatasetStatuses();
+    }
+  }
+
+  Future<void> _loadDatasetStatuses() async {
+    final statuses = <String, DatasetExtractionStatus>{};
+    for (final dataset in Datasets.all) {
+      statuses[dataset.name] = await _archiveDownloads.getDatasetStatus(dataset.name);
+    }
+    if (mounted) {
+      setState(() => _datasetStatuses = statuses);
+    }
   }
 
   Future<void> _loadLibrary() async {
@@ -156,7 +179,13 @@ class _LibraryPageState extends State<LibraryPage> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Search and filters
+              // Archive Status Cards
+              _buildArchiveStatusSection(theme, colorScheme),
+              const SizedBox(height: 16),
+              // Type Filter Color Chips
+              _buildTypeFilterChips(theme, colorScheme, stats),
+              const SizedBox(height: 16),
+              // Search and dataset filter
               Row(
                 children: [
                   // Search box
@@ -217,45 +246,6 @@ class _LibraryPageState extends State<LibraryPage> {
                             )),
                       ],
                       onChanged: (value) => _library.setDatasetFilter(value),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Type filter
-                  Expanded(
-                    child: DropdownButtonFormField<String?>(
-                      // ignore: deprecated_member_use
-                      value: _library.currentFileType,
-                      decoration: InputDecoration(
-                        labelText: 'File Type',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text('All Types'),
-                        ),
-                        ...stats.typeCounts.entries.map((e) => DropdownMenuItem(
-                              value: e.key,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    _getTypeIcon(e.key),
-                                    size: 18,
-                                    color: _getTypeColor(e.key),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text('${e.key} (${e.value})'),
-                                ],
-                              ),
-                            )),
-                      ],
-                      onChanged: (value) => _library.setTypeFilter(value),
                     ),
                   ),
                 ],
