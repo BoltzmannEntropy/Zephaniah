@@ -271,14 +271,14 @@ class AboutPage extends StatelessWidget {
               const Divider(),
               const SizedBox(height: 16),
               Text(
-                'Licensed under MIT License',
+                'Licensed under GNU GPL v3.0',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                '2026 Shlomo Kashani / Qneura.ai',
+                '2026 Shlomo Kashani / QNeura.ai',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
