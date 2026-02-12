@@ -64,6 +64,7 @@ class ZephaniahApp extends StatelessWidget {
           ),
         ),
       ),
+      themeMode: ThemeMode.system,
       home: const MainShell(),
     );
   }

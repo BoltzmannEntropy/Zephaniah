@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../version.dart';
+import 'privacy_policy_page.dart';
+import 'terms_of_service_page.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -124,6 +126,30 @@ class AboutPage extends StatelessWidget {
                         onPressed: () => _launchUrl(_issuesUrl),
                         icon: const Icon(Icons.bug_report),
                         label: const Text('Report Issue'),
+                      ),
+                      const SizedBox(height: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const PrivacyPolicyPage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.privacy_tip_outlined),
+                        label: const Text('Privacy Policy'),
+                      ),
+                      const SizedBox(height: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const TermsOfServicePage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.description_outlined),
+                        label: const Text('Terms of Service'),
                       ),
                     ],
                   ),
