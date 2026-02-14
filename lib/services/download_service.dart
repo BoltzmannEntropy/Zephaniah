@@ -183,9 +183,20 @@ class DownloadService extends ChangeNotifier {
 
     _log.info('DownloadService', 'Starting download: ${task.source.title}');
 
+    final uri = Uri.tryParse(task.source.url);
+    if (uri == null || !(uri.isScheme('http') || uri.isScheme('https'))) {
+      await _failDownload(task, 'Invalid download URL');
+      return;
+    }
+
+    http.Client? client;
+    IOSink? sink;
+    StreamSubscription<List<int>>? subscription;
+    final tempPath = '${task.destinationPath}.part';
+
     try {
-      final client = http.Client();
-      final request = http.Request('GET', Uri.parse(task.source.url));
+      client = http.Client();
+      final request = http.Request('GET', uri);
       request.headers['User-Agent'] =
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
 
@@ -201,12 +212,13 @@ class DownloadService extends ChangeNotifier {
 
       final totalBytes = response.contentLength;
       var receivedBytes = 0;
-      final file = File(task.destinationPath);
-      final sink = file.openWrite();
+      final file = File(tempPath);
+      await file.parent.create(recursive: true);
+      sink = file.openWrite();
 
-      final subscription = response.stream.listen(
+      subscription = response.stream.listen(
         (chunk) {
-          sink.add(chunk);
+          sink?.add(chunk);
           receivedBytes += chunk.length;
 
           final idx = _queue.indexWhere((t) => t.id == task.id);
@@ -219,14 +231,30 @@ class DownloadService extends ChangeNotifier {
           }
         },
         onDone: () async {
-          await sink.close();
-          client.close();
+          await sink?.close();
+          sink = null;
+          final tempFile = File(tempPath);
+          if (await tempFile.exists()) {
+            final finalFile = File(task.destinationPath);
+            if (await finalFile.exists()) {
+              await finalFile.delete();
+            }
+            await tempFile.rename(task.destinationPath);
+          }
+          client?.close();
           _activeDownloads.remove(task.id);
           await _completeDownload(task, receivedBytes);
         },
         onError: (error) async {
-          await sink.close();
-          client.close();
+          await sink?.close();
+          sink = null;
+          try {
+            final tempFile = File(tempPath);
+            if (await tempFile.exists()) {
+              await tempFile.delete();
+            }
+          } catch (_) {}
+          client?.close();
           _activeDownloads.remove(task.id);
           await _failDownload(task, error.toString());
         },
@@ -235,6 +263,15 @@ class DownloadService extends ChangeNotifier {
 
       _activeDownloads[task.id] = subscription;
     } catch (e) {
+      await sink?.close();
+      try {
+        final tempFile = File(tempPath);
+        if (await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      } catch (_) {}
+      client?.close();
+      _activeDownloads.remove(task.id);
       await _failDownload(task, e.toString());
     }
   }
@@ -339,6 +376,22 @@ class DownloadService extends ChangeNotifier {
   void cancel(String taskId) {
     final subscription = _activeDownloads.remove(taskId);
     subscription?.cancel();
+
+    DownloadTask? task;
+    for (final candidate in _queue) {
+      if (candidate.id == taskId) {
+        task = candidate;
+        break;
+      }
+    }
+    if (task != null) {
+      final tempFile = File('${task.destinationPath}.part');
+      if (tempFile.existsSync()) {
+        try {
+          tempFile.deleteSync();
+        } catch (_) {}
+      }
+    }
 
     _queue.removeWhere((t) => t.id == taskId);
     notifyListeners();

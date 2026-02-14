@@ -37,10 +37,15 @@ class GDriveService extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final trimmedFolderId = folderId.trim();
+      if (trimmedFolderId.isEmpty) {
+        throw Exception('Folder ID cannot be empty');
+      }
+
       // Use Google Drive API v3 to list files in public folder
       // This works for folders shared with "Anyone with the link"
       final url = 'https://www.googleapis.com/drive/v3/files'
-          '?q=%27$folderId%27+in+parents'
+          '?q=%27$trimmedFolderId%27+in+parents'
           '&fields=files(id,name,mimeType,size,modifiedTime)'
           '&pageSize=1000';
 
@@ -53,6 +58,9 @@ class GDriveService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        if (data is! Map<String, dynamic>) {
+          throw const FormatException('Invalid Google Drive response payload');
+        }
         final filesList = data['files'] as List<dynamic>? ?? [];
 
         _files = filesList.map((f) => GDriveFile(
@@ -84,8 +92,14 @@ class GDriveService extends ChangeNotifier {
 
   /// Download a file from Google Drive by ID
   Future<bool> downloadFile(GDriveFile file) async {
-    if (_downloads.containsKey(file.id) &&
-        _downloads[file.id]!.status == GDriveDownloadStatus.downloading) {
+    if (file.id.trim().isEmpty) {
+      _log.error('GDrive', 'Invalid file ID for ${file.name}');
+      return false;
+    }
+
+    final existingDownload = _downloads[file.id];
+    if (existingDownload != null &&
+        existingDownload.status == GDriveDownloadStatus.downloading) {
       _log.warning('GDrive', 'File already downloading: ${file.name}');
       return false;
     }
@@ -134,7 +148,9 @@ class GDriveService extends ChangeNotifier {
       var request = http.Request('GET', Uri.parse(downloadUrl));
       request.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
 
-      var response = await client.send(request);
+      var response = await client
+          .send(request)
+          .timeout(const Duration(seconds: 30));
 
       // Handle Google Drive virus scan confirmation for large files
       if (response.statusCode == 200) {
@@ -150,7 +166,9 @@ class GDriveService extends ChangeNotifier {
             client = http.Client();
             request = http.Request('GET', Uri.parse(downloadUrl));
             request.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
-            response = await client.send(request);
+            response = await client
+                .send(request)
+                .timeout(const Duration(seconds: 30));
           }
         }
       }
@@ -198,6 +216,12 @@ class GDriveService extends ChangeNotifier {
       return true;
     } catch (e) {
       _log.error('GDrive', 'Failed: ${file.name} - $e');
+      try {
+        final tempFile = File('$filePath.tmp');
+        if (await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      } catch (_) {}
       _downloads[file.id] = GDriveDownload(
         fileId: file.id,
         fileName: file.name,
@@ -218,10 +242,11 @@ class GDriveService extends ChangeNotifier {
 
   /// Cancel a download
   void cancelDownload(String fileId) {
-    if (_downloads.containsKey(fileId)) {
+    final existing = _downloads[fileId];
+    if (existing != null) {
       _downloads[fileId] = GDriveDownload(
         fileId: fileId,
-        fileName: _downloads[fileId]!.fileName,
+        fileName: existing.fileName,
         status: GDriveDownloadStatus.cancelled,
         bytesReceived: 0,
         totalBytes: 0,

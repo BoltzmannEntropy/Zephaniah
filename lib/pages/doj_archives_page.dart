@@ -998,7 +998,8 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
     }
 
     // Show completion status
-    if (zipProgress?.status == ArchiveDownloadStatus.completed) {
+    final completedProgress = zipProgress;
+    if (completedProgress != null && completedProgress.status == ArchiveDownloadStatus.completed) {
       return Row(
         children: [
           Icon(Icons.check_circle, color: Colors.green.shade600),
@@ -1009,14 +1010,14 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
               children: [
                 const Text('Extracted & Ready'),
                 Text(
-                  '${zipProgress!.extractedFiles} files in Library',
+                  '${completedProgress.extractedFiles} files in Library',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ),
           TextButton.icon(
-            onPressed: () => _openFolder(zipProgress.extractedPath ?? _archiveDownloads.archivesDir),
+            onPressed: () => _openFolder(completedProgress.extractedPath ?? _archiveDownloads.archivesDir),
             icon: const Icon(Icons.folder_open, size: 18),
             label: const Text('Open Folder'),
           ),
@@ -1039,25 +1040,27 @@ class _DojArchivesPageState extends State<DojArchivesPage> {
     }
 
     // Show error and retry
-    if (zipProgress?.status == ArchiveDownloadStatus.failed) {
+    final failedProgress = zipProgress;
+    if (failedProgress != null && failedProgress.status == ArchiveDownloadStatus.failed) {
       return Row(
         children: [
           Icon(Icons.error, color: Colors.red.shade600),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              zipProgress!.error ?? 'Download failed',
+              failedProgress.error ?? 'Download failed',
               style: TextStyle(color: Colors.red.shade600, fontSize: 12),
             ),
           ),
-          TextButton(
-            onPressed: () => _archiveDownloads.retryDownload(
-              datasetName: dataset.name,
-              url: dataset.zipUrl!,
-              expectedSize: dataset.sizeBytes,
+          if (dataset.zipUrl != null)
+            TextButton(
+              onPressed: () => _archiveDownloads.retryDownload(
+                datasetName: dataset.name,
+                url: dataset.zipUrl!,
+                expectedSize: dataset.sizeBytes,
+              ),
+              child: const Text('Retry'),
             ),
-            child: const Text('Retry'),
-          ),
         ],
       );
     }

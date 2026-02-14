@@ -56,25 +56,42 @@ class AppSettings {
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic value, int fallback) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+
+    bool parseBool(dynamic value, bool fallback) {
+      if (value is bool) return value;
+      final lower = value?.toString().toLowerCase();
+      if (lower == 'true') return true;
+      if (lower == 'false') return false;
+      return fallback;
+    }
+
+    List<String> parseStringList(dynamic value, List<String> fallback) {
+      if (value is List) {
+        return value.map((e) => e.toString()).toList(growable: false);
+      }
+      return fallback;
+    }
+
     return AppSettings(
       defaultSearchTerms:
           json['default_search_terms'] as String? ?? 'Jeffrey Epstein',
-      defaultFileTypes: (json['default_file_types'] as List?)
-              ?.cast<String>() ??
-          const ['pdf'],
+      defaultFileTypes: parseStringList(json['default_file_types'], const ['pdf']),
       defaultTimeRange: json['default_time_range'] as String? ?? 'lastWeek',
       defaultSearchEngine:
           json['default_search_engine'] as String? ?? 'google',
-      defaultInstitutions: (json['default_institutions'] as List?)
-              ?.cast<String>() ??
-          const [],
-      concurrentDownloads: json['concurrent_downloads'] as int? ?? 3,
-      autoRetryAttempts: json['auto_retry_attempts'] as int? ?? 2,
+      defaultInstitutions: parseStringList(json['default_institutions'], const []),
+      concurrentDownloads: parseInt(json['concurrent_downloads'], 3),
+      autoRetryAttempts: parseInt(json['auto_retry_attempts'], 2),
       downloadLocation: json['download_location'] as String? ?? '',
-      autoRunOnLaunch: json['auto_run_on_launch'] as bool? ?? false,
-      snapshotRetentionDays: json['snapshot_retention_days'] as int? ?? 30,
-      showLogsPanel: json['show_logs_panel'] as bool? ?? true,
-      showDownloadQueue: json['show_download_queue'] as bool? ?? true,
+      autoRunOnLaunch: parseBool(json['auto_run_on_launch'], false),
+      snapshotRetentionDays: parseInt(json['snapshot_retention_days'], 30),
+      showLogsPanel: parseBool(json['show_logs_panel'], true),
+      showDownloadQueue: parseBool(json['show_download_queue'], true),
     );
   }
 
@@ -118,6 +135,7 @@ class SettingsService extends ChangeNotifier {
   AppSettings _settings = const AppSettings();
   File? _settingsFile;
   String _appDir = '';
+  bool _initialized = false;
 
   AppSettings get settings => _settings;
   String get appDir => _appDir;
@@ -126,17 +144,63 @@ class SettingsService extends ChangeNotifier {
   String get logsDir => '$_appDir/logs';
 
   Future<void> initialize() async {
-    final dir = await getApplicationDocumentsDirectory();
-    _appDir = '${dir.path}/Zephaniah';
+    if (_initialized) return;
+    Directory baseDir;
+    try {
+      baseDir = await getApplicationDocumentsDirectory();
+    } catch (_) {
+      baseDir = Directory.systemTemp;
+    }
+    _appDir = '${baseDir.path}/Zephaniah';
 
     // Create directories
-    await Directory(artifactsDir).create(recursive: true);
-    await Directory(databaseDir).create(recursive: true);
-    await Directory(logsDir).create(recursive: true);
+    await _ensureDir(artifactsDir);
+    await _ensureDir(databaseDir);
+    await _ensureDir(logsDir);
 
     // Load settings
     _settingsFile = File('$_appDir/settings.json');
     await _load();
+    _initialized = true;
+  }
+
+  Future<void> _ensureDir(String dirPath) async {
+    final dir = Directory(dirPath);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+  }
+
+  AppSettings _sanitizeSettings(AppSettings value) {
+    final validFileTypes = value.defaultFileTypes
+        .where((t) => FileType.fromExtension(t) != null)
+        .toList(growable: false);
+    final validTimeRange = TimeRange.values.any((t) => t.name == value.defaultTimeRange)
+        ? value.defaultTimeRange
+        : TimeRange.lastWeek.name;
+    final validEngine = SearchEngine.values.any((e) => e.code == value.defaultSearchEngine)
+        ? value.defaultSearchEngine
+        : SearchEngine.duckduckgo.code;
+    final safeConcurrent = value.concurrentDownloads.clamp(1, 8);
+    final safeRetries = value.autoRetryAttempts.clamp(0, 5);
+    final safeRetention = value.snapshotRetentionDays.clamp(1, 3650);
+
+    var resolvedDownloadLocation = value.downloadLocation.trim();
+    if (resolvedDownloadLocation.isEmpty) {
+      resolvedDownloadLocation = artifactsDir;
+    } else {
+      resolvedDownloadLocation = Directory(resolvedDownloadLocation).absolute.path;
+    }
+
+    return value.copyWith(
+      defaultFileTypes: validFileTypes.isEmpty ? const ['pdf'] : validFileTypes,
+      defaultTimeRange: validTimeRange,
+      defaultSearchEngine: validEngine,
+      concurrentDownloads: safeConcurrent,
+      autoRetryAttempts: safeRetries,
+      snapshotRetentionDays: safeRetention,
+      downloadLocation: resolvedDownloadLocation,
+    );
   }
 
   Future<void> _load() async {
@@ -148,16 +212,20 @@ class SettingsService extends ChangeNotifier {
 
     try {
       final content = await _settingsFile!.readAsString();
-      final json = jsonDecode(content) as Map<String, dynamic>;
-      _settings = AppSettings.fromJson(json);
-
-      // Ensure download location is set
-      if (_settings.downloadLocation.isEmpty) {
-        _settings = _settings.copyWith(downloadLocation: artifactsDir);
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Settings JSON must be an object');
       }
+      _settings = _sanitizeSettings(AppSettings.fromJson(decoded));
+      await _ensureDir(_settings.downloadLocation);
     } catch (e) {
       debugPrint('Failed to load settings: $e');
       _settings = AppSettings(downloadLocation: artifactsDir);
+      try {
+        if (_settingsFile != null && await _settingsFile!.exists()) {
+          await _settingsFile!.rename('${_settingsFile!.path}.corrupt');
+        }
+      } catch (_) {}
     }
     notifyListeners();
   }
@@ -166,14 +234,20 @@ class SettingsService extends ChangeNotifier {
     if (_settingsFile == null) return;
     try {
       final json = jsonEncode(_settings.toJson());
-      await _settingsFile!.writeAsString(json);
+      final tempFile = File('${_settingsFile!.path}.tmp');
+      await tempFile.writeAsString(json, flush: true);
+      if (await _settingsFile!.exists()) {
+        await _settingsFile!.delete();
+      }
+      await tempFile.rename(_settingsFile!.path);
     } catch (e) {
       debugPrint('Failed to save settings: $e');
     }
   }
 
   Future<void> update(AppSettings newSettings) async {
-    _settings = newSettings;
+    _settings = _sanitizeSettings(newSettings);
+    await _ensureDir(_settings.downloadLocation);
     await _save();
     notifyListeners();
   }
@@ -185,13 +259,13 @@ class SettingsService extends ChangeNotifier {
     SearchEngine? engine,
     List<Institution>? institutions,
   }) async {
-    _settings = _settings.copyWith(
+    _settings = _sanitizeSettings(_settings.copyWith(
       defaultSearchTerms: terms,
       defaultFileTypes: fileTypes?.map((t) => t.extension).toList(),
       defaultTimeRange: timeRange?.name,
       defaultSearchEngine: engine?.code,
       defaultInstitutions: institutions?.map((i) => i.id).toList(),
-    );
+    ));
     await _save();
     notifyListeners();
   }
@@ -201,11 +275,12 @@ class SettingsService extends ChangeNotifier {
     int? autoRetryAttempts,
     String? downloadLocation,
   }) async {
-    _settings = _settings.copyWith(
+    _settings = _sanitizeSettings(_settings.copyWith(
       concurrentDownloads: concurrentDownloads,
       autoRetryAttempts: autoRetryAttempts,
       downloadLocation: downloadLocation,
-    );
+    ));
+    await _ensureDir(_settings.downloadLocation);
     await _save();
     notifyListeners();
   }
@@ -214,10 +289,10 @@ class SettingsService extends ChangeNotifier {
     bool? autoRunOnLaunch,
     int? snapshotRetentionDays,
   }) async {
-    _settings = _settings.copyWith(
+    _settings = _sanitizeSettings(_settings.copyWith(
       autoRunOnLaunch: autoRunOnLaunch,
       snapshotRetentionDays: snapshotRetentionDays,
-    );
+    ));
     await _save();
     notifyListeners();
   }
@@ -226,10 +301,10 @@ class SettingsService extends ChangeNotifier {
     bool? showLogsPanel,
     bool? showDownloadQueue,
   }) async {
-    _settings = _settings.copyWith(
+    _settings = _sanitizeSettings(_settings.copyWith(
       showLogsPanel: showLogsPanel,
       showDownloadQueue: showDownloadQueue,
-    );
+    ));
     await _save();
     notifyListeners();
   }
@@ -241,7 +316,7 @@ class SettingsService extends ChangeNotifier {
   }
 
   Future<void> reset() async {
-    _settings = AppSettings(downloadLocation: artifactsDir);
+    _settings = _sanitizeSettings(AppSettings(downloadLocation: artifactsDir));
     await _save();
     notifyListeners();
   }

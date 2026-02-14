@@ -8,7 +8,7 @@
 
   <br>
 
-  [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+  [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE)
   [![GitHub release](https://img.shields.io/github/v/release/BoltzmannEntropy/Zephaniah)](https://github.com/BoltzmannEntropy/Zephaniah/releases)
   [![GitHub downloads](https://img.shields.io/github/downloads/BoltzmannEntropy/Zephaniah/total)](https://github.com/BoltzmannEntropy/Zephaniah/releases)
   [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)](https://github.com/BoltzmannEntropy/Zephaniah)
@@ -310,9 +310,13 @@ All documents are declassified public records originally released by government 
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+- Source code: Business Source License 1.1 (`LICENSE`)
+- Binary distribution: Binary Distribution License (`BINARY-LICENSE.txt`)
+- Overview: `LICENSE.md`
 
-GNU GPL v3.0 - Copyright (c) 2026 QNeura.ai
+The official DMG/executable binaries may not be used commercially or redistributed.
+
+Copyright (c) 2026 QNeura.ai
 
 ## Acknowledgments
 

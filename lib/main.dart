@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'services/services.dart';
@@ -13,19 +16,97 @@ import 'pages/about_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
 
-  // Initialize services
-  await SettingsService().initialize();
-  await LogService().initialize();
-  await DatabaseService().initialize();
-  SearchService().initialize();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    final message = details.exceptionAsString();
+    try {
+      LogService().error('Flutter', message);
+    } catch (_) {
+      debugPrint('Flutter error: $message');
+    }
+    debugPrintStack(stackTrace: details.stack);
+  };
 
-  runApp(const ZephaniahApp());
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    try {
+      LogService().error('Platform', error.toString());
+    } catch (_) {
+      debugPrint('Platform error: $error');
+    }
+    debugPrintStack(stackTrace: stack);
+    return true;
+  };
+
+  final bootstrap = await _bootstrapServices();
+
+  runZonedGuarded(
+    () {
+      if (bootstrap.fatalError != null) {
+        runApp(StartupErrorApp(message: bootstrap.fatalError!));
+      } else {
+        runApp(ZephaniahApp(warnings: bootstrap.warnings));
+      }
+    },
+    (Object error, StackTrace stack) {
+      try {
+        LogService().error('Zone', error.toString());
+      } catch (_) {
+        debugPrint('Zoned error: $error');
+      }
+      debugPrintStack(stackTrace: stack);
+    },
+  );
+}
+
+class BootstrapResult {
+  final String? fatalError;
+  final List<String> warnings;
+
+  const BootstrapResult({this.fatalError, this.warnings = const []});
+}
+
+Future<BootstrapResult> _bootstrapServices() async {
+  final warnings = <String>[];
+
+  Future<void> guardedInit(
+    String name,
+    Future<void> Function() init, {
+    bool fatal = false,
+  }) async {
+    try {
+      await init();
+    } catch (e, stack) {
+      final msg = '$name initialization failed: $e';
+      debugPrint(msg);
+      debugPrintStack(stackTrace: stack);
+      if (fatal) {
+        throw Exception(msg);
+      }
+      warnings.add(msg);
+      try {
+        LogService().warning('Bootstrap', msg);
+      } catch (_) {}
+    }
+  }
+
+  try {
+    await guardedInit('MediaKit', () async => MediaKit.ensureInitialized(), fatal: true);
+    await guardedInit('SettingsService', () => SettingsService().initialize(), fatal: true);
+    await guardedInit('LogService', () => LogService().initialize());
+    await guardedInit('DatabaseService', () => DatabaseService().initialize());
+    await guardedInit('SearchService', () async => SearchService().initialize());
+  } catch (e) {
+    return BootstrapResult(fatalError: e.toString(), warnings: warnings);
+  }
+
+  return BootstrapResult(warnings: warnings);
 }
 
 class ZephaniahApp extends StatelessWidget {
-  const ZephaniahApp({super.key});
+  final List<String> warnings;
+
+  const ZephaniahApp({super.key, this.warnings = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -65,13 +146,39 @@ class ZephaniahApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const MainShell(),
+      home: MainShell(startupWarnings: warnings),
+      builder: (context, child) {
+        ErrorWidget.builder = (FlutterErrorDetails details) {
+          return Material(
+            color: Colors.transparent,
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 520),
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.35)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'A UI error occurred. Restart Zephaniah to recover.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          );
+        };
+        return child ?? const SizedBox.shrink();
+      },
     );
   }
 }
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final List<String> startupWarnings;
+
+  const MainShell({super.key, this.startupWarnings = const []});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -97,6 +204,18 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _settings.addListener(_onSettingsChanged);
     _download.addListener(_onDownloadChanged);
+    if (widget.startupWarnings.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final warningText = widget.startupWarnings.join('\n');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Startup warnings:\n$warningText'),
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      });
+    }
   }
 
   @override
@@ -158,6 +277,45 @@ class _MainShellState extends State<MainShell> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class StartupErrorApp extends StatelessWidget {
+  final String message;
+
+  const StartupErrorApp({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 56, color: Colors.red),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Zephaniah failed to start',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

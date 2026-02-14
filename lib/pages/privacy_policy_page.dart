@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
 
-  static const String _qneuraUrl = 'https://qneura.ai';
+  static const String _qneuraUrl = 'https://qneura.ai/apps.html';
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
@@ -62,18 +62,17 @@ class PrivacyPolicyPage extends StatelessWidget {
                   theme,
                   'Introduction',
                   'Zephaniah is a local-first application designed with your privacy as a core principle. '
-                      'This Privacy Policy explains how we handle your data (or rather, how we do not collect it).',
+                      'This Privacy Policy explains how we handle information when you use the app.',
                 ),
 
                 _buildSection(
                   theme,
                   'Data Collection',
-                  'Zephaniah does NOT collect, store, or transmit any personal data to external servers. '
-                      'The application operates entirely on your local device. Specifically:\n\n'
-                      '• No personal information is collected\n'
+                  'Zephaniah does not collect personal information by default. The application operates '
+                      'primarily on your local device. Specifically:\n\n'
                       '• No usage analytics or telemetry data is gathered\n'
                       '• No cookies or tracking technologies are used\n'
-                      '• No data is shared with third parties',
+                      '• No data is shared with third parties by the app',
                 ),
 
                 _buildSection(
@@ -92,14 +91,14 @@ class PrivacyPolicyPage extends StatelessWidget {
                   'Zephaniah only connects to the internet for the following purposes:\n\n'
                       '• Downloading publicly available archive files from sources you explicitly request\n'
                       '• Fetching archive metadata and file listings\n\n'
-                      'No personal data, usage statistics, or any other information is transmitted from your device.',
+                      'Your requests are sent to those public sources to complete the download.',
                 ),
 
                 _buildSection(
                   theme,
                   'Third-Party Services',
                   'The application downloads files from publicly available archives (Internet Archive, etc.). '
-                      'When accessing these services, their respective privacy policies apply to the connection. '
+                      'When accessing these services, their respective privacy policies apply. '
                       'Zephaniah itself does not integrate any third-party analytics, advertising, or tracking services.',
                 ),
 
@@ -127,7 +126,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                 _buildSection(
                   theme,
                   'Contact',
-                  'If you have any questions about this Privacy Policy, please contact us through our website.',
+                  'If you have any questions about this Privacy Policy, please contact solomon@qneura.ai or visit https://qneura.ai/apps.html.',
                 ),
 
                 const SizedBox(height: 24),
@@ -148,7 +147,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                       TextButton(
                         onPressed: () => _launchUrl(_qneuraUrl),
                         child: Text(
-                          'Qneura.ai',
+                          'QNeura.ai',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,

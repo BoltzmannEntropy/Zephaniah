@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide LicensePage;
 import 'package:url_launcher/url_launcher.dart';
 import '../version.dart';
+import 'license_page.dart';
 import 'privacy_policy_page.dart';
 import 'terms_of_service_page.dart';
 
@@ -151,6 +152,18 @@ class AboutPage extends StatelessWidget {
                         icon: const Icon(Icons.description_outlined),
                         label: const Text('Terms of Service'),
                       ),
+                      const SizedBox(height: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const LicensePage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.balance_outlined),
+                        label: const Text('License'),
+                      ),
                     ],
                   ),
                 ),
@@ -271,7 +284,7 @@ class AboutPage extends StatelessWidget {
               const Divider(),
               const SizedBox(height: 16),
               Text(
-                'Licensed under GNU GPL v3.0',
+                'Source: BSL 1.1 · Binary: Binary Distribution License',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

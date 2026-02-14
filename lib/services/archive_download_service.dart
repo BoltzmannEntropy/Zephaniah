@@ -144,6 +144,23 @@ class ArchiveDownloadService extends ChangeNotifier {
       .where((p) => p.status == ArchiveDownloadStatus.completed)
       .length;
 
+  /// Safely update a download's progress, returns true if updated
+  bool _updateDownload(String datasetName, ArchiveDownloadProgress Function(ArchiveDownloadProgress) updater) {
+    final current = _downloads[datasetName];
+    if (current == null) return false;
+    _downloads[datasetName] = updater(current);
+    return true;
+  }
+
+  String? _safeExtractPath(String rootDir, String zipEntryName) {
+    final normalizedRoot = path.normalize(path.absolute(rootDir));
+    final candidate = path.normalize(path.join(normalizedRoot, zipEntryName));
+    if (candidate == normalizedRoot || candidate.startsWith('$normalizedRoot${Platform.pathSeparator}')) {
+      return candidate;
+    }
+    return null;
+  }
+
   /// Start downloading an archive
   Future<void> startDownload({
     required String datasetName,
@@ -187,7 +204,9 @@ class ArchiveDownloadService extends ChangeNotifier {
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
       request.headers['Accept'] = 'application/zip, application/octet-stream, */*';
 
-      final response = await client.send(request);
+      final response = await client.send(request).timeout(
+        const Duration(seconds: 30),
+      );
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('HTTP ${response.statusCode}');
@@ -200,14 +219,15 @@ class ArchiveDownloadService extends ChangeNotifier {
 
       final subscription = response.stream.listen(
         (chunk) {
-          sink!.add(chunk);
+          sink?.add(chunk);
           receivedBytes += chunk.length;
 
-          _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+          if (_updateDownload(datasetName, (p) => p.copyWith(
             bytesReceived: receivedBytes,
             totalBytes: totalBytes,
-          );
-          notifyListeners();
+          ))) {
+            notifyListeners();
+          }
         },
         onDone: () async {
           await sink?.close();
@@ -216,12 +236,13 @@ class ArchiveDownloadService extends ChangeNotifier {
           _activeClients.remove(datasetName);
           _activeStreams.remove(datasetName);
 
-          _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+          if (_updateDownload(datasetName, (p) => p.copyWith(
             bytesReceived: receivedBytes,
             totalBytes: receivedBytes,
             filePath: filePath,
-          );
-          notifyListeners();
+          ))) {
+            notifyListeners();
+          }
 
           _log.info('ArchiveDownload', 'Download completed: $datasetName, starting extraction...');
 
@@ -234,11 +255,12 @@ class ArchiveDownloadService extends ChangeNotifier {
           _activeClients.remove(datasetName);
           _activeStreams.remove(datasetName);
 
-          _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+          if (_updateDownload(datasetName, (p) => p.copyWith(
             status: ArchiveDownloadStatus.failed,
             error: error.toString(),
-          );
-          notifyListeners();
+          ))) {
+            notifyListeners();
+          }
 
           _log.error('ArchiveDownload', 'Failed: $datasetName - $error');
         },
@@ -251,11 +273,12 @@ class ArchiveDownloadService extends ChangeNotifier {
       client?.close();
       _activeClients.remove(datasetName);
 
-      _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+      if (_updateDownload(datasetName, (p) => p.copyWith(
         status: ArchiveDownloadStatus.failed,
         error: e.toString(),
-      );
-      notifyListeners();
+      ))) {
+        notifyListeners();
+      }
 
       _log.error('ArchiveDownload', 'Failed to start: $datasetName - $e');
     }
@@ -269,13 +292,14 @@ class ArchiveDownloadService extends ChangeNotifier {
     );
 
     try {
-      _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+      if (_updateDownload(datasetName, (p) => p.copyWith(
         status: ArchiveDownloadStatus.extracting,
         extractedPath: extractDir,
         extractedFiles: 0,
         totalFiles: 0,
-      );
-      notifyListeners();
+      ))) {
+        notifyListeners();
+      }
 
       // Read the ZIP file
       final bytes = await File(zipPath).readAsBytes();
@@ -284,10 +308,11 @@ class ArchiveDownloadService extends ChangeNotifier {
       final totalFiles = archive.files.where((f) => !f.isFile || f.size > 0).length;
       var extractedCount = 0;
 
-      _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+      if (_updateDownload(datasetName, (p) => p.copyWith(
         totalFiles: totalFiles,
-      );
-      notifyListeners();
+      ))) {
+        notifyListeners();
+      }
 
       // Create extraction directory
       await Directory(extractDir).create(recursive: true);
@@ -297,9 +322,14 @@ class ArchiveDownloadService extends ChangeNotifier {
       // Extract files
       for (final file in archive.files) {
         final filename = file.name;
+        final safePath = _safeExtractPath(extractDir, filename);
+        if (safePath == null) {
+          _log.warning('ArchiveDownload', 'Skipped unsafe ZIP path: $filename');
+          continue;
+        }
 
         if (file.isFile) {
-          final outPath = path.join(extractDir, filename);
+          final outPath = safePath;
 
           // Create parent directories
           final parentDir = Directory(path.dirname(outPath));
@@ -315,15 +345,16 @@ class ArchiveDownloadService extends ChangeNotifier {
 
           // Update progress periodically (every 10 files or on last file)
           if (extractedCount % 10 == 0 || extractedCount == totalFiles) {
-            _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+            if (_updateDownload(datasetName, (p) => p.copyWith(
               extractedFiles: extractedCount,
               currentFile: filename,
-            );
-            notifyListeners();
+            ))) {
+              notifyListeners();
+            }
           }
         } else {
           // Directory entry - create it
-          final dirPath = path.join(extractDir, filename);
+          final dirPath = safePath;
           await Directory(dirPath).create(recursive: true);
         }
       }
@@ -336,12 +367,13 @@ class ArchiveDownloadService extends ChangeNotifier {
         _log.warning('ArchiveDownload', 'Could not delete ZIP file: $e');
       }
 
-      _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+      if (_updateDownload(datasetName, (p) => p.copyWith(
         status: ArchiveDownloadStatus.completed,
         extractedFiles: extractedCount,
         totalFiles: totalFiles,
-      );
-      notifyListeners();
+      ))) {
+        notifyListeners();
+      }
 
       _log.info('ArchiveDownload', 'Extraction completed: $datasetName ($extractedCount files)');
 
@@ -349,11 +381,12 @@ class ArchiveDownloadService extends ChangeNotifier {
       _library.scanLibrary();
 
     } catch (e) {
-      _downloads[datasetName] = _downloads[datasetName]!.copyWith(
+      if (_updateDownload(datasetName, (p) => p.copyWith(
         status: ArchiveDownloadStatus.failed,
         error: 'Extraction failed: $e',
-      );
-      notifyListeners();
+      ))) {
+        notifyListeners();
+      }
 
       _log.error('ArchiveDownload', 'Extraction failed: $datasetName - $e');
     }
@@ -523,6 +556,19 @@ class ArchiveDownloadService extends ChangeNotifier {
       progress: 0.0,
       fileCount: 0,
     );
+  }
+
+  @override
+  void dispose() {
+    for (final sub in _activeStreams.values) {
+      sub.cancel();
+    }
+    _activeStreams.clear();
+    for (final client in _activeClients.values) {
+      client.close();
+    }
+    _activeClients.clear();
+    super.dispose();
   }
 }
 

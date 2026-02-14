@@ -17,6 +17,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_DIR="$ROOT_DIR"
 FLUTTER_DIR="$ROOT_DIR"
 DIST_DIR="$ROOT_DIR/dist"
 
@@ -78,6 +79,15 @@ if [ ! -d "$APP_PATH" ]; then
 fi
 ok "Build complete: $APP_PATH"
 
+# Embed license files in the app bundle
+RESOURCES_DIR="$APP_PATH/Contents/Resources"
+if [ -f "$PROJECT_DIR/LICENSE" ]; then
+    cp "$PROJECT_DIR/LICENSE" "$RESOURCES_DIR/LICENSE"
+fi
+if [ -f "$PROJECT_DIR/BINARY-LICENSE.txt" ]; then
+    cp "$PROJECT_DIR/BINARY-LICENSE.txt" "$RESOURCES_DIR/BINARY-LICENSE.txt"
+fi
+
 # =============================================================================
 # Create Distribution Directory
 # =============================================================================
@@ -87,6 +97,18 @@ info "Creating DMG..."
 
 DMG_NAME="$APP_NAME-$VERSION-macos.dmg"
 DMG_PATH="$DIST_DIR/$DMG_NAME"
+
+# Prepare DMG staging directory (include licenses at root)
+DMG_STAGE="$DIST_DIR/dmg-stage"
+rm -rf "$DMG_STAGE"
+mkdir -p "$DMG_STAGE"
+cp -R "$APP_PATH" "$DMG_STAGE/$APP_NAME.app"
+if [ -f "$PROJECT_DIR/LICENSE" ]; then
+    cp "$PROJECT_DIR/LICENSE" "$DMG_STAGE/LICENSE"
+fi
+if [ -f "$PROJECT_DIR/BINARY-LICENSE.txt" ]; then
+    cp "$PROJECT_DIR/BINARY-LICENSE.txt" "$DMG_STAGE/BINARY-LICENSE.txt"
+fi
 
 # Remove old DMG if exists
 rm -f "$DMG_PATH"
@@ -108,17 +130,17 @@ if command -v create-dmg &> /dev/null; then
         --app-drop-link 450 185 \
         --hide-extension "$APP_NAME.app" \
         "$DMG_PATH" \
-        "$APP_PATH" \
+        "$DMG_STAGE" \
         2>/dev/null || {
             # Fallback if create-dmg fails (e.g., missing icon)
             warn "create-dmg failed, falling back to hdiutil..."
-            hdiutil create -volname "$APP_NAME" -srcfolder "$APP_PATH" \
+            hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_STAGE" \
                 -ov -format UDZO "$DMG_PATH"
         }
 else
     # Fallback to basic hdiutil
     info "Using hdiutil (install create-dmg for better DMG: brew install create-dmg)..."
-    hdiutil create -volname "$APP_NAME" -srcfolder "$APP_PATH" \
+    hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_STAGE" \
         -ov -format UDZO "$DMG_PATH"
 fi
 

@@ -66,6 +66,10 @@ class Aria2Service extends ChangeNotifier {
         ],
       );
 
+      // Drain stdout/stderr to avoid process pipe backpressure.
+      unawaited(_daemonProcess!.stdout.drain<List<int>>(<int>[]));
+      unawaited(_daemonProcess!.stderr.drain<List<int>>(<int>[]));
+
       // Wait for daemon to start
       await Future.delayed(const Duration(seconds: 2));
 
@@ -117,7 +121,7 @@ class Aria2Service extends ChangeNotifier {
   void _startStatusPolling() {
     _statusTimer?.cancel();
     _statusTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _updateAllStatus();
+      unawaited(_updateAllStatus());
     });
   }
 
@@ -282,11 +286,18 @@ class Aria2Service extends ChangeNotifier {
     ).timeout(const Duration(seconds: 5));
 
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
-      if (json['error'] != null) {
-        throw Exception(json['error']['message']);
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Invalid aria2 RPC payload');
       }
-      return json['result'];
+      if (decoded['error'] != null) {
+        final error = decoded['error'];
+        if (error is Map<String, dynamic> && error['message'] != null) {
+          throw Exception(error['message']);
+        }
+        throw Exception(error.toString());
+      }
+      return decoded['result'];
     } else {
       throw Exception('HTTP ${response.statusCode}');
     }

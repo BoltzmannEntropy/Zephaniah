@@ -11,6 +11,7 @@ class DatabaseService extends ChangeNotifier {
   DatabaseService._internal();
 
   Database? _db;
+  bool _initialized = false;
   final LogService _log = LogService();
 
   Database get db {
@@ -19,6 +20,8 @@ class DatabaseService extends ChangeNotifier {
   }
 
   Future<void> initialize() async {
+    if (_initialized) return;
+
     // Initialize FFI for desktop
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -26,16 +29,32 @@ class DatabaseService extends ChangeNotifier {
     final settings = SettingsService();
     final dbPath = path.join(settings.databaseDir, 'zephaniah.db');
 
-    _db = await databaseFactory.openDatabase(
-      dbPath,
-      options: OpenDatabaseOptions(
-        version: 1,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
-      ),
-    );
-
-    _log.info('DatabaseService', 'Database initialized at $dbPath');
+    try {
+      _db = await databaseFactory.openDatabase(
+        dbPath,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: _onCreate,
+          onUpgrade: _onUpgrade,
+        ),
+      );
+      _initialized = true;
+      _log.info('DatabaseService', 'Database initialized at $dbPath');
+    } catch (e) {
+      _log.error(
+        'DatabaseService',
+        'Primary DB open failed, using in-memory fallback: $e',
+      );
+      _db = await databaseFactory.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: _onCreate,
+          onUpgrade: _onUpgrade,
+        ),
+      );
+      _initialized = true;
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -125,6 +144,15 @@ class DatabaseService extends ChangeNotifier {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     _log.info('DatabaseService',
         'Database upgrade from $oldVersion to $newVersion');
+  }
+
+  @override
+  void dispose() {
+    final database = _db;
+    _db = null;
+    _initialized = false;
+    database?.close();
+    super.dispose();
   }
 
   // Search History CRUD

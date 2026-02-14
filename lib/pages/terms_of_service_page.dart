@@ -4,8 +4,9 @@ import 'package:url_launcher/url_launcher.dart';
 class TermsOfServicePage extends StatelessWidget {
   const TermsOfServicePage({super.key});
 
-  static const String _qneuraUrl = 'https://qneura.ai';
-  static const String _mitLicenseUrl = 'https://opensource.org/licenses/MIT';
+  static const String _qneuraUrl = 'https://qneura.ai/apps.html';
+  static const String _licenseOverviewUrl =
+      'https://github.com/BoltzmannEntropy/Zephaniah/blob/main/LICENSE.md';
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
@@ -61,146 +62,80 @@ class TermsOfServicePage extends StatelessWidget {
 
                 _buildSection(
                   theme,
-                  'Agreement to Terms',
-                  'By downloading, installing, or using Zephaniah ("the Application"), you agree to be bound by these Terms of Service. '
-                      'If you do not agree to these terms, please do not use the Application.',
+                  '1. Acceptance of Terms',
+                  'By downloading, installing, or using Zephaniah (the "Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. Additional guidelines may apply to specific features and are incorporated by reference.',
                 ),
 
                 _buildSection(
                   theme,
-                  'MIT License',
-                  'Zephaniah is open-source software released under the MIT License. This means:\n\n'
-                      '• You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software\n'
-                      '• The software is provided "as is", without warranty of any kind, express or implied\n'
-                      '• The authors or copyright holders shall not be liable for any claim, damages, or other liability',
-                ),
-
-                // MIT License Card
-                Card(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.article_outlined,
-                              size: 20,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'MIT License Text',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Copyright (c) 2026 Shlomo Kashani / Qneura.ai\n\n'
-                          'Permission is hereby granted, free of charge, to any person obtaining a copy '
-                          'of this software and associated documentation files (the "Software"), to deal '
-                          'in the Software without restriction, including without limitation the rights '
-                          'to use, copy, modify, merge, publish, distribute, sublicense, and/or sell '
-                          'copies of the Software, and to permit persons to whom the Software is '
-                          'furnished to do so, subject to the following conditions:\n\n'
-                          'The above copyright notice and this permission notice shall be included in all '
-                          'copies or substantial portions of the Software.\n\n'
-                          'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
-                          'IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, '
-                          'FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE '
-                          'AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER '
-                          'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, '
-                          'OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE '
-                          'SOFTWARE.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton.icon(
-                          onPressed: () => _launchUrl(_mitLicenseUrl),
-                          icon: const Icon(Icons.open_in_new, size: 16),
-                          label: const Text('View MIT License on OSI'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                _buildSection(
-                  theme,
-                  'Use of the Application',
-                  'You agree to use the Application only for lawful purposes and in accordance with these Terms. You agree not to:\n\n'
-                      '• Use the Application in any way that violates any applicable laws or regulations\n'
-                      '• Use the Application to download, store, or distribute illegal content\n'
-                      '• Attempt to interfere with or disrupt the integrity of any external services accessed through the Application',
+                  '2. Description of Service',
+                  'Zephaniah is an archive search and download tool designed to help researchers collect and organize public records. The Service allows you to search sources, manage downloads, and store research snapshots locally.',
                 ),
 
                 _buildSection(
                   theme,
-                  'Disclaimer of Warranties',
-                  'THE APPLICATION IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT ANY WARRANTIES OF ANY KIND, '
-                      'EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT:\n\n'
-                      '• The Application will meet your specific requirements\n'
-                      '• The Application will be uninterrupted, timely, secure, or error-free\n'
-                      '• The results obtained from using the Application will be accurate or reliable\n'
-                      '• Any errors in the Application will be corrected',
+                  '3. User Conduct',
+                  'You agree to use the Service only for lawful purposes. Do not use the Service to access content you do not have rights to use, to impersonate others, or to distribute illegal content.',
                 ),
 
                 _buildSection(
                   theme,
-                  'Limitation of Liability',
-                  'IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, '
-                      'INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF '
-                      'SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED '
-                      'AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR '
-                      'OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.',
+                  '4. Intellectual Property',
+                  'The Service and its original content (excluding user-provided content) are owned by QNeura.ai and its licensors. You retain ownership of your content. Nothing in these terms grants you rights to use QNeura.ai trademarks or branding without permission.',
                 ),
 
                 _buildSection(
                   theme,
-                  'User Responsibility',
-                  'You are solely responsible for:\n\n'
-                      '• Ensuring your use of the Application complies with all applicable laws in your jurisdiction\n'
-                      '• The content you download and how you use it\n'
-                      '• Maintaining the security of your local device and stored data\n'
-                      '• Any consequences arising from your use of the Application',
+                  '5. Automated Processing Disclaimer',
+                  'Automated extraction, filtering, or summarization features may be inaccurate or incomplete. You should verify important information using original sources.',
                 ),
 
                 _buildSection(
                   theme,
-                  'Third-Party Content',
-                  'The Application facilitates access to publicly available archives hosted by third parties. '
-                      'We do not control, endorse, or assume responsibility for any third-party content. '
-                      'Your use of third-party services is subject to their respective terms and policies.',
+                  '6. Disclaimer of Warranties',
+                  'THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED.',
                 ),
 
                 _buildSection(
                   theme,
-                  'Changes to Terms',
-                  'We reserve the right to modify these Terms at any time. Changes will be reflected in the Application '
-                      'with an updated "Last updated" date. Your continued use of the Application after any changes constitutes '
-                      'acceptance of the new Terms.',
+                  '7. Limitation of Liability',
+                  'IN NO EVENT SHALL QNEURA.AI BE LIABLE FOR ANY DAMAGES (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF DATA OR PROFIT, OR DUE TO BUSINESS INTERRUPTION) ARISING OUT OF THE USE OR INABILITY TO USE THE SERVICE.',
                 ),
 
                 _buildSection(
                   theme,
-                  'Governing Law',
-                  'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which '
-                      'the copyright holder resides, without regard to its conflict of law provisions.',
+                  '8. Changes to Terms',
+                  'We may update these Terms from time to time. Continued use of the Service after changes constitutes acceptance of the updated terms.',
                 ),
 
                 _buildSection(
                   theme,
-                  'Contact',
-                  'If you have any questions about these Terms of Service, please contact us through our website.',
+                  '9. Contact Us',
+                  'If you have any questions about these Terms, please contact solomon@qneura.ai or visit https://qneura.ai/apps.html.',
+                ),
+
+                _buildSection(
+                  theme,
+                  '10. External Content Sources',
+                  'The Service may provide access to public archives or third-party sources. These materials are provided by their respective owners and are subject to their own terms. You are responsible for ensuring your use complies with applicable laws and third-party terms.',
+                ),
+
+                _buildSection(
+                  theme,
+                  '11. Apple Standard EULA',
+                  'If you download Zephaniah via the Apple App Store, the Apple Standard EULA applies: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/.',
+                ),
+
+                _buildSection(
+                  theme,
+                  '12. License & Distribution',
+                  'Source code is licensed under the Business Source License 1.1 (see LICENSE). Official DMG/executable binaries are governed by a separate Binary Distribution License. Commercial use or redistribution of the Binary is not allowed. See $_licenseOverviewUrl for details.',
+                ),
+
+                _buildSection(
+                  theme,
+                  '13. Paid Features',
+                  'If paid features are offered, purchases are processed by the storefront or payment provider. Subscription management and cancellations are handled through your account with that provider.',
                 ),
 
                 const SizedBox(height: 24),
@@ -221,7 +156,7 @@ class TermsOfServicePage extends StatelessWidget {
                       TextButton(
                         onPressed: () => _launchUrl(_qneuraUrl),
                         child: Text(
-                          'Qneura.ai',
+                          'QNeura.ai',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
