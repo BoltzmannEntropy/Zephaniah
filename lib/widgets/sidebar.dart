@@ -99,10 +99,16 @@ class Sidebar extends StatelessWidget {
             onTap: () => onNavigate(4),
           ),
           _NavItem(
-            icon: Icons.info_outline_rounded,
-            label: 'About',
+            icon: Icons.workspace_premium_rounded,
+            label: 'Pro',
             isSelected: selectedIndex == 5,
             onTap: () => onNavigate(5),
+          ),
+          _NavItem(
+            icon: Icons.info_outline_rounded,
+            label: 'About',
+            isSelected: selectedIndex == 6,
+            onTap: () => onNavigate(6),
           ),
           const Spacer(),
           // Version
@@ -144,9 +150,7 @@ class _NavItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: Material(
-        color: isSelected
-            ? colorScheme.primaryContainer
-            : Colors.transparent,
+        color: isSelected ? colorScheme.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
@@ -167,8 +171,9 @@ class _NavItem extends StatelessWidget {
                   child: Text(
                     label,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                       color: isSelected
                           ? colorScheme.onPrimaryContainer
                           : colorScheme.onSurface.withValues(alpha: 0.9),

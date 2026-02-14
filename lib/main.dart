@@ -12,6 +12,7 @@ import 'pages/library_page.dart';
 import 'pages/search_page.dart';
 import 'pages/queue_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/pro_page.dart';
 import 'pages/about_page.dart';
 
 void main() async {
@@ -91,11 +92,22 @@ Future<BootstrapResult> _bootstrapServices() async {
   }
 
   try {
-    await guardedInit('MediaKit', () async => MediaKit.ensureInitialized(), fatal: true);
-    await guardedInit('SettingsService', () => SettingsService().initialize(), fatal: true);
+    await guardedInit(
+      'MediaKit',
+      () async => MediaKit.ensureInitialized(),
+      fatal: true,
+    );
+    await guardedInit(
+      'SettingsService',
+      () => SettingsService().initialize(),
+      fatal: true,
+    );
     await guardedInit('LogService', () => LogService().initialize());
     await guardedInit('DatabaseService', () => DatabaseService().initialize());
-    await guardedInit('SearchService', () async => SearchService().initialize());
+    await guardedInit(
+      'SearchService',
+      () async => SearchService().initialize(),
+    );
   } catch (e) {
     return BootstrapResult(fatalError: e.toString(), warnings: warnings);
   }
@@ -123,9 +135,7 @@ class ZephaniahApp extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.grey.withValues(alpha: 0.2),
-            ),
+            side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
           ),
         ),
       ),
@@ -139,9 +149,7 @@ class ZephaniahApp extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.grey.withValues(alpha: 0.2),
-            ),
+            side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
           ),
         ),
       ),
@@ -189,14 +197,15 @@ class _MainShellState extends State<MainShell> {
   final SettingsService _settings = SettingsService();
   final DownloadService _download = DownloadService();
 
-  // New navigation order: Archives, Library, Search, Queue, Settings, About
+  // New navigation order: Archives, Library, Search, Queue, Settings, Pro, About
   final List<Widget> _pages = [
-    const DojArchivesPage(),   // 0: Archives - download DOJ datasets
-    const LibraryPage(),       // 1: Library - gallery view of downloaded files
-    const SearchPage(),        // 2: Search - secondary feature for new documents
-    const QueuePage(),         // 3: Queue - download progress
-    const SettingsPage(),      // 4: Settings
-    const AboutPage(),         // 5: About
+    const DojArchivesPage(), // 0: Archives - download DOJ datasets
+    const LibraryPage(), // 1: Library - gallery view of downloaded files
+    const SearchPage(), // 2: Search - secondary feature for new documents
+    const QueuePage(), // 3: Queue - download progress
+    const SettingsPage(), // 4: Settings
+    const ProPage(), // 5: Pro / licensing
+    const AboutPage(), // 6: About
   ];
 
   @override
@@ -258,12 +267,11 @@ class _MainShellState extends State<MainShell> {
             child: Column(
               children: [
                 // Page content
-                Expanded(
-                  child: _pages[_selectedPageIndex],
-                ),
+                Expanded(child: _pages[_selectedPageIndex]),
                 // Download queue panel
                 if (settings.showDownloadQueue &&
-                    (_download.hasActiveDownloads || _download.completed.isNotEmpty))
+                    (_download.hasActiveDownloads ||
+                        _download.completed.isNotEmpty))
                   DownloadQueuePanel(
                     onItemTap: (task) {
                       // Navigate to Artifacts page (index 1) when item is tapped
@@ -307,10 +315,7 @@ class StartupErrorApp extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    message,
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(message, textAlign: TextAlign.center),
                 ],
               ),
             ),

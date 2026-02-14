@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../services/services.dart';
+import 'pro_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -23,8 +24,9 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _currentSettings = _settings.settings;
-    _searchTermsController =
-        TextEditingController(text: _currentSettings.defaultSearchTerms);
+    _searchTermsController = TextEditingController(
+      text: _currentSettings.defaultSearchTerms,
+    );
     _loadStats();
   }
 
@@ -46,13 +48,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _saveSettings() async {
-    await _settings.update(_currentSettings.copyWith(
-      defaultSearchTerms: _searchTermsController.text,
-    ));
+    await _settings.update(
+      _currentSettings.copyWith(
+        defaultSearchTerms: _searchTermsController.text,
+      ),
+    );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Settings saved')));
     }
   }
 
@@ -95,10 +99,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 32),
 
           // Search Defaults
-          _SectionHeader(
-            icon: Icons.search,
-            title: 'Search Defaults',
-          ),
+          _SectionHeader(icon: Icons.search, title: 'Search Defaults'),
           const SizedBox(height: 16),
           TextField(
             controller: _searchTermsController,
@@ -120,8 +121,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       .label,
                   onChanged: (value) {
                     setState(() {
-                      _currentSettings =
-                          _currentSettings.copyWith(defaultSearchEngine: value);
+                      _currentSettings = _currentSettings.copyWith(
+                        defaultSearchEngine: value,
+                      );
                     });
                   },
                 ),
@@ -139,8 +141,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       TimeRange.values.firstWhere((t) => t.name == name).label,
                   onChanged: (value) {
                     setState(() {
-                      _currentSettings =
-                          _currentSettings.copyWith(defaultTimeRange: value);
+                      _currentSettings = _currentSettings.copyWith(
+                        defaultTimeRange: value,
+                      );
                     });
                   },
                 ),
@@ -154,22 +157,25 @@ class _SettingsPageState extends State<SettingsPage> {
             spacing: 8,
             runSpacing: 8,
             children: FileType.values.map((type) {
-              final isSelected =
-                  _currentSettings.defaultFileTypes.contains(type.extension);
+              final isSelected = _currentSettings.defaultFileTypes.contains(
+                type.extension,
+              );
               return FilterChip(
                 label: Text(type.label),
                 selected: isSelected,
                 onSelected: (selected) {
                   setState(() {
-                    final types =
-                        List<String>.from(_currentSettings.defaultFileTypes);
+                    final types = List<String>.from(
+                      _currentSettings.defaultFileTypes,
+                    );
                     if (selected) {
                       types.add(type.extension);
                     } else {
                       types.remove(type.extension);
                     }
-                    _currentSettings =
-                        _currentSettings.copyWith(defaultFileTypes: types);
+                    _currentSettings = _currentSettings.copyWith(
+                      defaultFileTypes: types,
+                    );
                   });
                 },
               );
@@ -181,10 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 32),
 
           // Download Settings
-          _SectionHeader(
-            icon: Icons.download,
-            title: 'Downloads',
-          ),
+          _SectionHeader(icon: Icons.download, title: 'Downloads'),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -196,8 +199,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   itemLabel: (n) => '$n',
                   onChanged: (value) {
                     setState(() {
-                      _currentSettings =
-                          _currentSettings.copyWith(concurrentDownloads: value);
+                      _currentSettings = _currentSettings.copyWith(
+                        concurrentDownloads: value,
+                      );
                     });
                   },
                 ),
@@ -211,8 +215,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   itemLabel: (n) => '$n',
                   onChanged: (value) {
                     setState(() {
-                      _currentSettings =
-                          _currentSettings.copyWith(autoRetryAttempts: value);
+                      _currentSettings = _currentSettings.copyWith(
+                        autoRetryAttempts: value,
+                      );
                     });
                   },
                 ),
@@ -235,10 +240,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 32),
 
           // Snapshot Settings
-          _SectionHeader(
-            icon: Icons.camera_alt,
-            title: 'Snapshots',
-          ),
+          _SectionHeader(icon: Icons.camera_alt, title: 'Snapshots'),
           const SizedBox(height: 16),
           SwitchListTile(
             title: const Text('Auto-run on Launch'),
@@ -246,8 +248,9 @@ class _SettingsPageState extends State<SettingsPage> {
             value: _currentSettings.autoRunOnLaunch,
             onChanged: (value) {
               setState(() {
-                _currentSettings =
-                    _currentSettings.copyWith(autoRunOnLaunch: value);
+                _currentSettings = _currentSettings.copyWith(
+                  autoRunOnLaunch: value,
+                );
               });
             },
             shape: RoundedRectangleBorder(
@@ -263,8 +266,9 @@ class _SettingsPageState extends State<SettingsPage> {
             itemLabel: (n) => '$n days',
             onChanged: (value) {
               setState(() {
-                _currentSettings =
-                    _currentSettings.copyWith(snapshotRetentionDays: value);
+                _currentSettings = _currentSettings.copyWith(
+                  snapshotRetentionDays: value,
+                );
               });
             },
           ),
@@ -274,10 +278,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 32),
 
           // UI Settings
-          _SectionHeader(
-            icon: Icons.palette,
-            title: 'Interface',
-          ),
+          _SectionHeader(icon: Icons.palette, title: 'Interface'),
           const SizedBox(height: 16),
           SwitchListTile(
             title: const Text('Show Download Queue'),
@@ -285,8 +286,9 @@ class _SettingsPageState extends State<SettingsPage> {
             value: _currentSettings.showDownloadQueue,
             onChanged: (value) {
               setState(() {
-                _currentSettings =
-                    _currentSettings.copyWith(showDownloadQueue: value);
+                _currentSettings = _currentSettings.copyWith(
+                  showDownloadQueue: value,
+                );
               });
             },
             shape: RoundedRectangleBorder(
@@ -301,8 +303,9 @@ class _SettingsPageState extends State<SettingsPage> {
             value: _currentSettings.showLogsPanel,
             onChanged: (value) {
               setState(() {
-                _currentSettings =
-                    _currentSettings.copyWith(showLogsPanel: value);
+                _currentSettings = _currentSettings.copyWith(
+                  showLogsPanel: value,
+                );
               });
             },
             shape: RoundedRectangleBorder(
@@ -315,11 +318,31 @@ class _SettingsPageState extends State<SettingsPage> {
           const Divider(),
           const SizedBox(height: 32),
 
-          // Storage
-          _SectionHeader(
-            icon: Icons.storage,
-            title: 'Storage',
+          // Pro / Licensing
+          _SectionHeader(icon: Icons.workspace_premium_rounded, title: 'Pro'),
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium_rounded),
+              title: const Text('Zephaniah Pro'),
+              subtitle: const Text('7-day trial and Polar.sh licensing'),
+              trailing: FilledButton.tonal(
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const ProPage()));
+                },
+                child: const Text('Open Pro'),
+              ),
+            ),
           ),
+
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 32),
+
+          // Storage
+          _SectionHeader(icon: Icons.storage, title: 'Storage'),
           const SizedBox(height: 16),
           Card(
             child: Padding(
@@ -348,12 +371,14 @@ class _SettingsPageState extends State<SettingsPage> {
                         onPressed: () async {
                           final messenger = ScaffoldMessenger.of(context);
                           await _db.cleanupOldArtifacts(
-                              _currentSettings.snapshotRetentionDays);
+                            _currentSettings.snapshotRetentionDays,
+                          );
                           _loadStats();
                           if (mounted) {
                             messenger.showSnackBar(
                               const SnackBar(
-                                  content: Text('Old artifacts cleaned')),
+                                content: Text('Old artifacts cleaned'),
+                              ),
                             );
                           }
                         },
@@ -368,13 +393,15 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
-                                  content: Text(
-                                      'Logs exported to ${file?.path ?? "N/A"}')),
+                                content: Text(
+                                  'Diagnostic logs exported to ${file?.path ?? "N/A"}',
+                                ),
+                              ),
                             );
                           }
                         },
-                        icon: const Icon(Icons.file_download),
-                        label: const Text('Export Logs'),
+                        icon: const Icon(Icons.manage_search_rounded),
+                        label: const Text('Export System Logs'),
                       ),
                     ],
                   ),
@@ -410,10 +437,7 @@ class _SectionHeader extends StatelessWidget {
   final IconData icon;
   final String title;
 
-  const _SectionHeader({
-    required this.icon,
-    required this.title,
-  });
+  const _SectionHeader({required this.icon, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -461,10 +485,7 @@ class _DropdownSetting<T> extends StatelessWidget {
         border: const OutlineInputBorder(),
       ),
       items: items.map((item) {
-        return DropdownMenuItem<T>(
-          value: item,
-          child: Text(itemLabel(item)),
-        );
+        return DropdownMenuItem<T>(value: item, child: Text(itemLabel(item)));
       }).toList(),
       onChanged: (v) {
         if (v != null) onChanged(v);
