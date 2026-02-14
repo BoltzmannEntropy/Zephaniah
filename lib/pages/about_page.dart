@@ -18,7 +18,8 @@ class AboutPage extends StatelessWidget {
   // Archive source URLs
   static const Map<String, String> _sourceUrls = {
     'Internet Archive': 'https://archive.org/download/Epstein-Data-Sets-So-Far',
-    'Google Drive': 'https://drive.google.com/drive/folders/18tIY9QEGUZe0q_AFAxoPnnVBCWbqHm2p',
+    'Google Drive':
+        'https://drive.google.com/drive/folders/18tIY9QEGUZe0q_AFAxoPnnVBCWbqHm2p',
     'GitHub Index': 'https://github.com/yung-megafone/Epstein-Files',
     'Reddit': 'https://www.reddit.com/r/Epstein/',
   };
@@ -97,6 +98,74 @@ class AboutPage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
+              // Important Notice
+              Card(
+                color: theme.colorScheme.errorContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Important Notice',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'This tool indexes publicly available archives for research and discovery. '
+                        'Users are responsible for lawful and ethical use of downloaded materials.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onErrorContainer,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // What This Project Does
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'What This Project Does',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '• Aggregates archive links and metadata from public sources\n'
+                        '• Downloads and organizes documents for local browsing\n'
+                        '• Provides searchable indexing and playback for media files\n'
+                        '• Preserves provenance by linking to source archives',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Links section
               Card(
                 child: Padding(
@@ -128,7 +197,80 @@ class AboutPage extends StatelessWidget {
                         icon: const Icon(Icons.bug_report),
                         label: const Text('Report Issue'),
                       ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Archive Sources section
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Archive Sources',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 8),
+                      Text(
+                        'Click to visit data sources',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildSourceChip(
+                            'Internet Archive',
+                            Colors.blue,
+                            _sourceUrls['Internet Archive']!,
+                          ),
+                          _buildSourceChip(
+                            'Google Drive',
+                            Colors.amber.shade700,
+                            _sourceUrls['Google Drive']!,
+                          ),
+                          _buildSourceChip(
+                            'GitHub Index',
+                            Colors.grey.shade700,
+                            _sourceUrls['GitHub Index']!,
+                          ),
+                          _buildSourceChip(
+                            'Reddit',
+                            Colors.deepOrange,
+                            _sourceUrls['Reddit']!,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Legal section
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Legal',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       FilledButton.tonalIcon(
                         onPressed: () {
                           Navigator.of(context).push(
@@ -170,44 +312,6 @@ class AboutPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Archive Sources section
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Archive Sources',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Click to visit data sources',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          _buildSourceChip('Internet Archive', Colors.blue, _sourceUrls['Internet Archive']!),
-                          _buildSourceChip('Google Drive', Colors.amber.shade700, _sourceUrls['Google Drive']!),
-                          _buildSourceChip('GitHub Index', Colors.grey.shade700, _sourceUrls['GitHub Index']!),
-                          _buildSourceChip('Reddit', Colors.deepOrange, _sourceUrls['Reddit']!),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
               // Powered By section
               Card(
                 child: Padding(
@@ -216,7 +320,7 @@ class AboutPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Powered By',
+                        'Model Credits & Licenses',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -227,11 +331,34 @@ class AboutPage extends StatelessWidget {
                         runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: [
-                          _buildTechChip('Flutter', Colors.blue, 'https://flutter.dev'),
-                          _buildTechChip('Syncfusion PDF', Colors.teal, 'https://pub.dev/packages/syncfusion_flutter_pdfviewer'),
-                          _buildTechChip('media_kit', Colors.purple, 'https://pub.dev/packages/media_kit'),
-                          _buildTechChip('SQLite', Colors.green, 'https://sqlite.org'),
+                          _buildTechChip(
+                            'Flutter',
+                            Colors.blue,
+                            'https://flutter.dev',
+                          ),
+                          _buildTechChip(
+                            'Syncfusion PDF',
+                            Colors.teal,
+                            'https://pub.dev/packages/syncfusion_flutter_pdfviewer',
+                          ),
+                          _buildTechChip(
+                            'media_kit',
+                            Colors.purple,
+                            'https://pub.dev/packages/media_kit',
+                          ),
+                          _buildTechChip(
+                            'SQLite',
+                            Colors.green,
+                            'https://sqlite.org',
+                          ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Flutter (BSD-3) · Syncfusion PDF (vendor terms) · media_kit (MIT) · SQLite (public domain)',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -306,7 +433,11 @@ class AboutPage extends StatelessWidget {
   Widget _buildSourceChip(String label, Color color, String url) {
     return ActionChip(
       onPressed: () => _launchUrl(url),
-      avatar: Icon(Icons.open_in_new, size: 16, color: Colors.white.withValues(alpha: 0.9)),
+      avatar: Icon(
+        Icons.open_in_new,
+        size: 16,
+        color: Colors.white.withValues(alpha: 0.9),
+      ),
       label: Text(
         label,
         style: const TextStyle(
@@ -323,7 +454,11 @@ class AboutPage extends StatelessWidget {
   Widget _buildTechChip(String label, Color color, String url) {
     return ActionChip(
       onPressed: () => _launchUrl(url),
-      avatar: Icon(Icons.open_in_new, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+      avatar: Icon(
+        Icons.open_in_new,
+        size: 14,
+        color: Colors.white.withValues(alpha: 0.8),
+      ),
       label: Text(
         label,
         style: const TextStyle(

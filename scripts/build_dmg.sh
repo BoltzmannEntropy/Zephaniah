@@ -5,12 +5,14 @@
 # Creates a macOS DMG installer for distribution.
 #
 # Usage:
-#   ./scripts/build_dmg.sh [version]              # Build DMG only
-#   ./scripts/build_dmg.sh [version] --upload     # Build and upload to GitHub
+#   ./scripts/build_dmg.sh [version]                        # Build DMG only
+#   ./scripts/build_dmg.sh [version] --upload               # Build and upload to GitHub
+#   ./scripts/build_dmg.sh [version] --sync-website         # Build and update website
+#   ./scripts/build_dmg.sh [version] --upload --sync-website # Full release
 #
 # Examples:
-#   ./scripts/build_dmg.sh 1.0.0
-#   ./scripts/build_dmg.sh 1.0.0 --upload
+#   ./scripts/build_dmg.sh 1.1.0
+#   ./scripts/build_dmg.sh 1.1.0 --upload --sync-website
 # =============================================================================
 
 set -euo pipefail
@@ -20,17 +22,22 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 PROJECT_DIR="$ROOT_DIR"
 FLUTTER_DIR="$ROOT_DIR"
 DIST_DIR="$ROOT_DIR/dist"
+WEBSITE_DIR="$(dirname "$ROOT_DIR")/ZephaniahWEB"
 
 # App info
 APP_NAME="Zephaniah"
 VERSION="${1:-1.0.0}"
 UPLOAD_TO_GITHUB=false
+SYNC_WEBSITE=false
 
 # Parse arguments
 for arg in "$@"; do
     case $arg in
         --upload)
             UPLOAD_TO_GITHUB=true
+            ;;
+        --sync-website)
+            SYNC_WEBSITE=true
             ;;
     esac
 done
@@ -263,6 +270,44 @@ $(cat "$DIST_DIR/$DMG_NAME.sha256")
 fi
 
 # =============================================================================
+# Sync Website (if --sync-website flag)
+# =============================================================================
+if [ "$SYNC_WEBSITE" = true ]; then
+    info ""
+    info "Syncing website with release v$VERSION..."
+
+    WEBSITE_INDEX="$WEBSITE_DIR/index.html"
+
+    if [ ! -f "$WEBSITE_INDEX" ]; then
+        warn "Website not found at $WEBSITE_DIR. Skipping website sync."
+    else
+        # Update download URLs (replace any version pattern)
+        sed -i '' -E "s|/releases/download/v[0-9]+\.[0-9]+\.[0-9]+/Zephaniah-[0-9]+\.[0-9]+\.[0-9]+-macos\.dmg|/releases/download/v$VERSION/Zephaniah-$VERSION-macos.dmg|g" "$WEBSITE_INDEX"
+        ok "Updated download URLs to v$VERSION"
+
+        # Update version display text
+        sed -i '' -E "s|v[0-9]+\.[0-9]+\.[0-9]+ \&bull; macOS|v$VERSION \&bull; macOS|g" "$WEBSITE_INDEX"
+        ok "Updated version display to v$VERSION"
+
+        # Commit and push website changes
+        cd "$WEBSITE_DIR"
+        if git diff --quiet; then
+            info "No website changes to commit"
+        else
+            git add index.html
+            git commit -m "Update to v$VERSION"
+            git push
+            ok "Website changes pushed to GitHub"
+        fi
+        cd "$ROOT_DIR"
+
+        echo ""
+        echo -e "${GREEN}=== Website Synced ===${NC}"
+        echo "Website will update shortly at: https://boltzmannentropy.github.io/zephaniah.github.io/"
+    fi
+fi
+
+# =============================================================================
 # Summary
 # =============================================================================
 echo ""
@@ -277,8 +322,16 @@ echo "To install:"
 echo "  1. Open $DMG_NAME"
 echo "  2. Drag Zephaniah to Applications"
 echo ""
-if [ "$UPLOAD_TO_GITHUB" = false ]; then
-    echo "To upload to GitHub:"
-    echo "  ./scripts/build_dmg.sh $VERSION --upload"
+if [ "$UPLOAD_TO_GITHUB" = false ] || [ "$SYNC_WEBSITE" = false ]; then
+    echo "Additional options:"
+    if [ "$UPLOAD_TO_GITHUB" = false ]; then
+        echo "  --upload        Upload to GitHub Releases"
+    fi
+    if [ "$SYNC_WEBSITE" = false ]; then
+        echo "  --sync-website  Update website download links"
+    fi
+    echo ""
+    echo "Full release command:"
+    echo "  ./scripts/build_dmg.sh $VERSION --upload --sync-website"
     echo ""
 fi
