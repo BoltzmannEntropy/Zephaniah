@@ -14,6 +14,7 @@ class AboutPage extends StatelessWidget {
       'https://github.com/BoltzmannEntropy/Zephaniah';
   static const String _issuesUrl =
       'https://github.com/BoltzmannEntropy/Zephaniah/issues';
+  static const String _qneuraUrl = 'https://qneura.ai/apps.html';
 
   // Archive source URLs
   static const Map<String, String> _sourceUrls = {
@@ -417,10 +418,14 @@ class AboutPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                '2026 Shlomo Kashani / QNeura.ai',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              GestureDetector(
+                onTap: () => _launchUrl(_qneuraUrl),
+                child: Text(
+                  '2026 Qneura.ai',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ],
