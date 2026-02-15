@@ -325,7 +325,9 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListTile(
               leading: const Icon(Icons.workspace_premium_rounded),
               title: const Text('Zephaniah Pro'),
-              subtitle: const Text('7-day trial and Polar.sh licensing'),
+              subtitle: const Text(
+                'Free app. No trial timer or paid license required.',
+              ),
               trailing: FilledButton.tonal(
                 onPressed: () {
                   Navigator.of(
