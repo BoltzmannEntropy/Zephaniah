@@ -8,3 +8,4 @@ export 'aria2_service.dart';
 export 'library_service.dart';
 export 'thumbnail_service.dart';
 export 'gdrive_service.dart';
+export 'mcp_server.dart';

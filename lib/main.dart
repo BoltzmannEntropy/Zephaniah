@@ -12,6 +12,7 @@ import 'pages/library_page.dart';
 import 'pages/search_page.dart';
 import 'pages/queue_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/mcp_page.dart';
 import 'pages/pro_page.dart';
 import 'pages/about_page.dart';
 
@@ -197,15 +198,16 @@ class _MainShellState extends State<MainShell> {
   final SettingsService _settings = SettingsService();
   final DownloadService _download = DownloadService();
 
-  // New navigation order: Archives, Library, Search, Queue, Settings, Pro, About
+  // New navigation order: Archives, Library, Search, Queue, Settings, MCP, Pro, About
   final List<Widget> _pages = [
     const DojArchivesPage(), // 0: Archives - download DOJ datasets
     const LibraryPage(), // 1: Library - gallery view of downloaded files
     const SearchPage(), // 2: Search - secondary feature for new documents
     const QueuePage(), // 3: Queue - download progress
     const SettingsPage(), // 4: Settings
-    const ProPage(), // 5: Pro / licensing
-    const AboutPage(), // 6: About
+    const McpPage(), // 5: MCP - Claude integration
+    const ProPage(), // 6: Pro / licensing
+    const AboutPage(), // 7: About
   ];
 
   @override

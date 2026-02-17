@@ -99,16 +99,22 @@ class Sidebar extends StatelessWidget {
             onTap: () => onNavigate(4),
           ),
           _NavItem(
-            icon: Icons.workspace_premium_rounded,
-            label: 'Pro',
+            icon: Icons.hub_rounded,
+            label: 'MCP',
             isSelected: selectedIndex == 5,
             onTap: () => onNavigate(5),
           ),
           _NavItem(
-            icon: Icons.info_outline_rounded,
-            label: 'About',
+            icon: Icons.workspace_premium_rounded,
+            label: 'Pro',
             isSelected: selectedIndex == 6,
             onTap: () => onNavigate(6),
+          ),
+          _NavItem(
+            icon: Icons.info_outline_rounded,
+            label: 'About',
+            isSelected: selectedIndex == 7,
+            onTap: () => onNavigate(7),
           ),
           const Spacer(),
           // Version
