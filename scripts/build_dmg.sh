@@ -26,7 +26,32 @@ WEBSITE_DIR="$(dirname "$ROOT_DIR")/ZephaniahWEB"
 
 # App info
 APP_NAME="Zephaniah"
-VERSION="${1:-1.0.0}"
+
+# Auto-extract version from pubspec.yaml if not provided
+read_version_from_pubspec() {
+    local pubspec="$ROOT_DIR/pubspec.yaml"
+    if [ -f "$pubspec" ]; then
+        grep '^version:' "$pubspec" | head -1 | cut -d'+' -f1 | cut -d':' -f2 | xargs
+    fi
+}
+
+# First positional arg that doesn't start with -- is the version
+VERSION=""
+for arg in "$@"; do
+    case $arg in
+        --*) ;;
+        *) VERSION="$arg" ;;
+    esac
+done
+
+# Fall back to pubspec version or default
+if [ -z "$VERSION" ]; then
+    VERSION="$(read_version_from_pubspec)"
+fi
+if [ -z "$VERSION" ]; then
+    VERSION="1.0.0"
+fi
+
 UPLOAD_TO_GITHUB=false
 SYNC_WEBSITE=false
 
@@ -110,6 +135,7 @@ DMG_STAGE="$DIST_DIR/dmg-stage"
 rm -rf "$DMG_STAGE"
 mkdir -p "$DMG_STAGE"
 cp -R "$APP_PATH" "$DMG_STAGE/$APP_NAME.app"
+ln -s /Applications "$DMG_STAGE/Applications"
 if [ -f "$PROJECT_DIR/LICENSE" ]; then
     cp "$PROJECT_DIR/LICENSE" "$DMG_STAGE/LICENSE"
 fi
@@ -166,6 +192,15 @@ cd "$DIST_DIR"
 shasum -a 256 "$DMG_NAME" > "$DMG_NAME.sha256"
 ok "Checksum: $(cat "$DMG_NAME.sha256")"
 
+# Copy release notes if present
+RELEASE_NOTES_SRC="$ROOT_DIR/RELEASE_NOTES.md"
+RELEASE_NOTES_NAME="${APP_NAME}-${VERSION}-RELEASE_NOTES.md"
+if [ -f "$RELEASE_NOTES_SRC" ]; then
+    cp "$RELEASE_NOTES_SRC" "$DIST_DIR/$RELEASE_NOTES_NAME"
+    shasum -a 256 "$RELEASE_NOTES_NAME" > "$RELEASE_NOTES_NAME.sha256"
+    ok "Release notes copied: $RELEASE_NOTES_NAME"
+fi
+
 # =============================================================================
 # Create Source Code Zip
 # =============================================================================
@@ -205,6 +240,12 @@ if [ ! -f "$SOURCE_ZIP_PATH" ]; then
 fi
 ok "Source zip created: $SOURCE_ZIP_PATH ($(du -h "$SOURCE_ZIP_PATH" | cut -f1))"
 
+# Generate source ZIP checksum
+cd "$DIST_DIR"
+shasum -a 256 "$SOURCE_ZIP_NAME" > "$SOURCE_ZIP_NAME.sha256"
+ok "Source checksum: $(cat "$SOURCE_ZIP_NAME.sha256")"
+cd "$ROOT_DIR"
+
 # =============================================================================
 # Upload to GitHub Release (if --upload flag)
 # =============================================================================
@@ -224,43 +265,48 @@ if [ "$UPLOAD_TO_GITHUB" = true ]; then
 
     TAG="v$VERSION"
 
+    NOTES_FILE="$ROOT_DIR/RELEASE_NOTES.md"
+    DMG_SHA_PATH="$DIST_DIR/$DMG_NAME.sha256"
+    SOURCE_SHA_PATH="$DIST_DIR/$SOURCE_ZIP_NAME.sha256"
+    RELEASE_NOTES_PATH="$DIST_DIR/$RELEASE_NOTES_NAME"
+    RELEASE_NOTES_SHA_PATH="$DIST_DIR/$RELEASE_NOTES_NAME.sha256"
+
     # Check if release exists, create if not
     if ! gh release view "$TAG" &> /dev/null; then
         info "Creating release $TAG..."
-        gh release create "$TAG" \
-            --title "$APP_NAME $VERSION" \
-            --notes "## $APP_NAME $VERSION
-
-### Downloads
-- **DMG Installer**: $DMG_NAME
-- **Source Code**: $SOURCE_ZIP_NAME
-
-### Installation
-1. Download the DMG file
-2. Open it and drag Zephaniah to Applications
-3. On first launch, right-click and select Open (macOS Gatekeeper)
-
-### Checksums
-\`\`\`
-$(cat "$DIST_DIR/$DMG_NAME.sha256")
-\`\`\`
-" \
-            --draft
+        if [ -f "$NOTES_FILE" ]; then
+            gh release create "$TAG" \
+                --title "$APP_NAME $VERSION" \
+                --notes-file "$NOTES_FILE" \
+                --draft
+        else
+            gh release create "$TAG" \
+                --title "$APP_NAME $VERSION" \
+                --notes "Release $APP_NAME $VERSION" \
+                --draft
+        fi
         ok "Release $TAG created as draft"
+    elif [ -f "$NOTES_FILE" ]; then
+        gh release edit "$TAG" --title "$APP_NAME $VERSION" --notes-file "$NOTES_FILE"
+        ok "Release $TAG updated with latest release notes"
     fi
 
-    # Upload assets
-    info "Uploading DMG..."
-    gh release upload "$TAG" "$DMG_PATH" --clobber
-    ok "Uploaded: $DMG_NAME"
+    # Upload assets (required release set)
+    RELEASE_ASSETS=(
+        "$DMG_PATH"
+        "$DMG_SHA_PATH"
+        "$SOURCE_ZIP_PATH"
+        "$SOURCE_SHA_PATH"
+    )
+    if [ -f "$RELEASE_NOTES_PATH" ] && [ -f "$RELEASE_NOTES_SHA_PATH" ]; then
+        RELEASE_ASSETS+=("$RELEASE_NOTES_PATH" "$RELEASE_NOTES_SHA_PATH")
+    else
+        warn "Release notes assets not found in dist/, uploading core assets only"
+    fi
 
-    info "Uploading source zip..."
-    gh release upload "$TAG" "$SOURCE_ZIP_PATH" --clobber
-    ok "Uploaded: $SOURCE_ZIP_NAME"
-
-    info "Uploading checksum..."
-    gh release upload "$TAG" "$DIST_DIR/$DMG_NAME.sha256" --clobber
-    ok "Uploaded: $DMG_NAME.sha256"
+    info "Uploading release assets..."
+    gh release upload "$TAG" "${RELEASE_ASSETS[@]}" --clobber
+    ok "Uploaded ${#RELEASE_ASSETS[@]} assets to $TAG"
 
     echo ""
     echo -e "${GREEN}=== Upload Complete ===${NC}"
@@ -317,6 +363,7 @@ echo "DMG:        $DMG_PATH"
 echo "Source:     $SOURCE_ZIP_PATH"
 echo "Size:       DMG=$(du -h "$DMG_PATH" | cut -f1), Source=$(du -h "$SOURCE_ZIP_PATH" | cut -f1)"
 echo "Checksum:   $DIST_DIR/$DMG_NAME.sha256"
+echo "Source SHA: $DIST_DIR/$SOURCE_ZIP_NAME.sha256"
 echo ""
 echo "To install:"
 echo "  1. Open $DMG_NAME"

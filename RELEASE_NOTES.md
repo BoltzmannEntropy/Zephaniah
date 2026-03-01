@@ -25,7 +25,7 @@ Zephaniah v1.1.0 is a major update introducing archive download capabilities, an
 ### Legal & Compliance
 - **Privacy Policy**: Comprehensive privacy policy page
 - **Terms of Service**: Clear terms of service documentation
-- **GPLv3 License**: Switched to GNU General Public License v3
+- **Dual License Model**: Source under BSL 1.1 and binary distribution under Zephaniah Binary Distribution License
 
 ## Improvements
 
@@ -62,4 +62,4 @@ This version can be installed alongside or replace v1.0.0. User data and prefere
 
 ---
 
-For bug reports and feature requests, visit: https://github.com/anthropics/zephaniah/issues
+For bug reports and feature requests, visit: https://github.com/BoltzmannEntropy/Zephaniah/issues

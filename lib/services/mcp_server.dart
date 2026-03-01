@@ -59,7 +59,7 @@ class McpServer extends ChangeNotifier {
   Duration? get uptime => _startedAt != null ? DateTime.now().difference(_startedAt!) : null;
 
   // Tool definitions
-  late final List<McpTool> _tools;
+  List<McpTool>? _tools;
 
   void _initializeTools() {
     _tools = [
@@ -243,8 +243,8 @@ class McpServer extends ChangeNotifier {
             'is_downloading': status.isDownloading,
             'file_count': status.fileCount,
             'progress': progress?.progress ?? 0.0,
-            'status_text': progress?.status ?? 'idle',
-            'downloaded_bytes': progress?.downloadedBytes ?? 0,
+            'status_text': progress?.statusText ?? 'idle',
+            'downloaded_bytes': progress?.bytesReceived ?? 0,
             'total_bytes': progress?.totalBytes ?? 0,
           };
         },
@@ -272,16 +272,20 @@ class McpServer extends ChangeNotifier {
           final terms = args['terms'] as String;
           final engine = args['engine'] as String? ?? 'duckduckgo';
           final fileTypes = (args['file_types'] as List<dynamic>?)?.cast<String>() ?? ['pdf'];
-          final timeRange = args['time_range'] as String? ?? 'any';
+          final timeRangeInput =
+              args['time_range'] as String? ?? TimeRange.anytime.name;
+          final timeRangeValue = timeRangeInput == 'any'
+              ? TimeRange.anytime.name
+              : timeRangeInput;
 
           final query = SearchQuery(
             terms: terms,
             fileTypes: fileTypes.map((t) => FileType.values.firstWhere((ft) => ft.extension == t, orElse: () => FileType.pdf)).toList(),
-            timeRange: TimeRange.values.firstWhere((t) => t.name == timeRange, orElse: () => TimeRange.any),
-            searchEngine: SearchEngine.values.firstWhere((e) => e.code == engine, orElse: () => SearchEngine.duckduckgo),
+            timeRange: TimeRange.values.firstWhere((t) => t.name == timeRangeValue, orElse: () => TimeRange.anytime),
+            engine: SearchEngine.values.firstWhere((e) => e.code == engine, orElse: () => SearchEngine.duckduckgo),
           );
 
-          final results = await _search.search(query, 1);
+          final results = await _search.search(query, page: 1);
 
           return {
             'query': terms,
@@ -315,12 +319,12 @@ class McpServer extends ChangeNotifier {
           final title = args['title'] as String? ?? url.split('/').last;
 
           final result = SearchResult(
+            id: 'mcp_${DateTime.now().microsecondsSinceEpoch}',
             title: title,
             url: url,
             snippet: 'Manual download via MCP',
             sourceDomain: Uri.tryParse(url)?.host ?? 'unknown',
             fileType: FileType.pdf,
-            filename: title,
           );
 
           try {
@@ -372,7 +376,7 @@ class McpServer extends ChangeNotifier {
         },
         handler: (args) async {
           final limit = args['limit'] as int? ?? 20;
-          final searches = await _db.getSearches(limit);
+          final searches = await _db.getSearches(limit: limit);
           return {
             'searches': searches.map((s) => {
                   'id': s.id,
@@ -414,7 +418,7 @@ class McpServer extends ChangeNotifier {
                   'file_type': a.fileType?.extension,
                   'file_size': a.fileSize,
                   'status': a.status.name,
-                  'downloaded_at': a.downloadedAt?.toIso8601String(),
+                  'downloaded_at': a.downloadedAt.toIso8601String(),
                 }).toList(),
             'count': artifacts.length,
           };
@@ -511,8 +515,8 @@ class McpServer extends ChangeNotifier {
   }
 
   List<McpTool> get tools {
-    if (_tools.isEmpty) _initializeTools();
-    return _tools;
+    if (_tools == null) _initializeTools();
+    return _tools!;
   }
 
   void _addLog(String message) {
@@ -538,7 +542,7 @@ class McpServer extends ChangeNotifier {
       _requestCount = 0;
 
       _addLog('MCP server started on $_host:$_port');
-      _log.info('McpServer', 'Started on $_host:$_port with ${_tools.length} tools');
+      _log.info('McpServer', 'Started on $_host:$_port with ${tools.length} tools');
       notifyListeners();
 
       _server!.listen(_handleRequest);

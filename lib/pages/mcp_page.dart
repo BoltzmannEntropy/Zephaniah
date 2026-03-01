@@ -420,7 +420,7 @@ class _McpPageState extends State<McpPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${param.key}',
+                          param.key,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontFamily: 'monospace',
                             fontWeight: FontWeight.bold,

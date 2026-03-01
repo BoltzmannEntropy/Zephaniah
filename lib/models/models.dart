@@ -6,3 +6,4 @@ export 'artifact.dart';
 export 'snapshot.dart';
 export 'download_task.dart';
 export 'search_history.dart';
+export 'dataset.dart';
