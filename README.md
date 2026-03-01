@@ -26,6 +26,9 @@
 
 A desktop application for **macOS, Windows, and Linux** to download and browse the **Epstein Files** archive. Downloads datasets directly from Internet Archive and Google Drive, automatically extracts ZIP files, and provides a library viewer for PDFs, documents, and media files.
 
+The codebase is cross-platform, but [we currently provide macOS binaries only.](https://boltzmannentropy.github.io/zephaniah.github.io/)
+License: Source code is licensed under Business Source License 1.1 (BSL-1.1), and binary distributions are licensed under the Zephaniah Binary Distribution License. See LICENSE, BINARY-LICENSE.txt, and the [website License page](https://boltzmannentropy.github.io/zephaniah.github.io/license.html).
+
 ### Archive Sources
 
 | Source | Description | Link |
@@ -134,6 +137,16 @@ Download the latest release for your platform:
 Since Zephaniah is not notarized with Apple, macOS may display a warning: *"Zephaniah" cannot be opened because Apple cannot check it for malicious software.*
 
 **To open the app:**
+
+**First, remove the quarantine attribute in Terminal:**
+
+```bash
+# If installed to /Applications (system-wide):
+xattr -d com.apple.quarantine /Applications/Zephaniah.app
+
+# If installed to ~/Applications (user-only):
+xattr -d com.apple.quarantine ~/Applications/Zephaniah.app
+```
 
 **Option 1: Right-click to Open**
 1. Right-click (or Control+click) on `Zephaniah.app`
